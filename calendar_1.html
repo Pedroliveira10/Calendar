@@ -426,25 +426,25 @@ const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 const USER_ID = 'pedro_amelia';
 
-async function fbLoad() {
+window.fbLoad = async function() {
   try {
     const snap = await getDoc(doc(db, 'caldata', USER_ID));
     if (snap.exists()) {
       const d = snap.data();
-      habits = d.habits || [];
-      localItems = d.localItems || [];
-      categories = d.categories || [];
+      window._fbData = d;
     }
   } catch(e) { console.log('Firebase load error', e); }
-}
+};
 
-async function fbSave() {
+window.fbSave = async function(habits, localItems, categories) {
   try {
     await setDoc(doc(db, 'caldata', USER_ID), {
       habits, localItems, categories, updatedAt: new Date().toISOString()
     });
   } catch(e) { console.log('Firebase save error', e); }
-}
+};
+</script>
+<script>
 const CLIENT_ID = '292126261971-v33ko726ib2o3ltatigo2ktd7i36l20h.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -548,7 +548,12 @@ function loadGIS() {
   return new Promise(resolve=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=resolve;document.head.appendChild(s);});
 }
 async function init() {
-  await fbLoad(); // load habits, localItems, categories from Firebase first
+  await window.fbLoad();
+  if (window._fbData) {
+    habits = window._fbData.habits || [];
+    localItems = window._fbData.localItems || [];
+    categories = window._fbData.categories || [];
+  }
   await loadGIS();
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:SCOPES,
@@ -767,7 +772,7 @@ function editLocalItem(id){
 function deleteLocalItem(id){
   if(!confirm('Delete this item?')) return;
   localItems=localItems.filter(i=>i.id!==id);
-  fbSave(); closeModal(); renderSchedule(); renderWeek();
+  window.fbSave(habits, localItems, categories); closeModal(); renderSchedule(); renderWeek();
 }
 
 // EDIT HABIT
@@ -787,7 +792,7 @@ function editHabit(idx){
 function deleteHabit(idx){
   if(!confirm('Delete this habit?')) return;
   habits.splice(idx,1);
-  fbSave(); closeModal(); renderHabits();
+  window.fbSave(habits, localItems, categories); closeModal(); renderHabits();
 }
 
 // WHO DID IT
@@ -860,7 +865,7 @@ function confirmWho() {
   }
   pendingDoneId = null;
   if (pendingDoneType === 'habit') renderHabits(); else renderSchedule();
-  fbSave();
+  window.fbSave(habits, localItems, categories);
 }
 
 function closeWhoModal() {
@@ -966,7 +971,7 @@ function promptNewCategory() {
   const icon = icons[categories.length % icons.length];
   const id = Date.now().toString();
   categories.push({ id, name, icon });
-  fbSave(); renderHabits();
+  window.fbSave(habits, localItems, categories); renderHabits();
 }
 
 function editCategory(ci) {
@@ -974,17 +979,17 @@ function editCategory(ci) {
   const action = prompt(`Edit "${cat.name}"\n\n1 - Rename\n2 - Change icon\n3 - Delete\n\nEnter 1, 2 or 3:`);
   if (action === '1') {
     const name = prompt('New name:', cat.name);
-    if (name) { categories[ci].name = name; fbSave(); renderHabits(); }
+    if (name) { categories[ci].name = name; window.fbSave(habits, localItems, categories); renderHabits(); }
   } else if (action === '2') {
     openIconPicker(icon => {
       categories[ci].icon = icon;
-      fbSave(); renderHabits();
+      window.fbSave(habits, localItems, categories); renderHabits();
     });
   } else if (action === '3') {
     if (confirm('Delete this category? Habits inside will become uncategorized.')) {
       habits.forEach(h => { if (h.cat === cat.id) delete h.cat; });
       categories.splice(ci, 1);
-      fbSave(); renderHabits();
+      window.fbSave(habits, localItems, categories); renderHabits();
     }
   }
 }
@@ -1118,7 +1123,7 @@ async function saveEvent(){
     } else {
       habits.push({name:title,color:selectedColor,freq,specificDays,days:[0,0,0,0,0,0,0],doneBy:{},createdDate:fmt(new Date()),cat});
     }
-    fbSave(); renderHabits(); closeModal(); switchTab('habits'); return;
+    window.fbSave(habits, localItems, categories); renderHabits(); closeModal(); switchTab('habits'); return;
   }
 
   // EDIT/ADD GCAL EVENT
@@ -1151,7 +1156,7 @@ async function saveEvent(){
   } else {
     localItems.push({id:Date.now().toString(),type,title,date,time,notes,doneBy:null});
   }
-  fbSave(); closeModal(); renderWeek(); renderSchedule();
+  window.fbSave(habits, localItems, categories); closeModal(); renderWeek(); renderSchedule();
 }
 
 // WEATHER BAR
