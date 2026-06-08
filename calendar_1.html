@@ -188,6 +188,44 @@
   .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* LOCK SCREEN */
+  #lockScreen {
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    position: fixed; inset: 0; z-index: 500; cursor: pointer;
+    background: linear-gradient(160deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+    padding: 60px 28px 48px; max-width: 430px; margin: 0 auto;
+    user-select: none;
+  }
+  #lockScreen.hidden { display: none; }
+
+  .ls-top { text-align: center; width: 100%; }
+  .ls-time { font-size: 80px; font-weight: 200; color: #fff; letter-spacing: -4px; line-height: 1; font-family: -apple-system, sans-serif; }
+  .ls-date { font-size: 16px; color: rgba(255,255,255,0.6); margin-top: 8px; font-weight: 400; letter-spacing: 0.3px; }
+
+  .ls-weather { display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border-radius: 20px; padding: 16px 24px; width: 100%; border: 1px solid rgba(255,255,255,0.1); }
+  .ls-weather-main { display: flex; align-items: center; gap: 12px; flex: 1; }
+  .ls-temp { font-size: 36px; font-weight: 300; color: #fff; }
+  .ls-weather-icon { font-size: 36px; }
+  .ls-weather-info { }
+  .ls-weather-desc { font-size: 13px; color: rgba(255,255,255,0.7); text-transform: capitalize; }
+  .ls-humidity { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .ls-weather-extra { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+  .ls-feels { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .ls-wind { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  .ls-cards { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .ls-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border-radius: 16px; padding: 14px 18px; border: 1px solid rgba(255,255,255,0.1); }
+  .ls-card-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .ls-event-title { font-size: 14px; font-weight: 500; color: #fff; }
+  .ls-event-time { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .ls-habit-row { display: flex; align-items: center; justify-content: space-between; }
+  .ls-habit-count { font-size: 24px; font-weight: 300; color: #fff; }
+  .ls-habit-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .ls-progress { height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .ls-progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #0071e3, #e3008c); transition: width 0.4s ease; }
+
+  .ls-hint { font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 0.5px; }
+
   #topbar.show { display: block; }
   #content.show { display: block; }
   #fab.show { display: flex; }
@@ -211,6 +249,7 @@
         <button class="icon-btn" onclick="prevPeriod()">‹</button>
         <button class="icon-btn" onclick="nextPeriod()">›</button>
         <button class="icon-btn" onclick="openStats()" style="font-size:16px;">📊</button>
+        <button class="icon-btn" onclick="showLockScreen()" style="font-size:16px;" title="Lock screen">🔒</button>
         <button class="icon-btn" onclick="openSettings()" style="font-size:16px;">⚙️</button>
         <button class="icon-btn" onclick="signOut()" style="font-size:13px;">↩</button>
       </div>
@@ -236,7 +275,48 @@
 </div>
 
 <!-- STATS -->
-<div id="statsPanel">
+<!-- LOCK SCREEN -->
+<div id="lockScreen" onclick="unlockScreen()">
+  <div class="ls-top">
+    <div class="ls-time" id="lsTime">00:00</div>
+    <div class="ls-date" id="lsDate">Monday, 8 June</div>
+  </div>
+
+  <div class="ls-weather" id="lsWeather" style="display:none;">
+    <div class="ls-weather-main">
+      <div class="ls-weather-icon" id="lsWeatherIcon">🌤</div>
+      <div>
+        <div class="ls-temp" id="lsTemp">--°</div>
+        <div class="ls-weather-desc" id="lsWeatherDesc">Loading...</div>
+        <div class="ls-humidity" id="lsHumidity">💧 --%</div>
+      </div>
+    </div>
+    <div class="ls-weather-extra">
+      <div class="ls-feels" id="lsFeels">Feels --°</div>
+      <div class="ls-wind" id="lsWind">💨 -- km/h</div>
+    </div>
+  </div>
+
+  <div class="ls-cards" id="lsCards">
+    <div class="ls-card" id="lsEventCard" style="display:none;">
+      <div class="ls-card-label">Next Event</div>
+      <div class="ls-event-title" id="lsEventTitle">—</div>
+      <div class="ls-event-time" id="lsEventTime"></div>
+    </div>
+    <div class="ls-card" id="lsHabitCard" style="display:none;">
+      <div class="ls-card-label">Habits Today</div>
+      <div class="ls-habit-row">
+        <div>
+          <div class="ls-habit-count" id="lsHabitCount">0/0</div>
+          <div class="ls-habit-sub">completed</div>
+        </div>
+      </div>
+      <div class="ls-progress"><div class="ls-progress-fill" id="lsProgressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="ls-hint">Tap anywhere to open</div>
+</div>
   <div class="stats-sheet">
     <div class="stats-handle"></div>
     <div class="stats-title">Monthly Stats</div>
@@ -1109,6 +1189,91 @@ async function saveEvent(){
 
 document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal'))closeWhoModal();});
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
+// LOCK SCREEN
+let lsClockInterval = null;
+const WX_ICONS = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
+
+function startLockClock() {
+  function tick() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2,'0');
+    const m = now.getMinutes().toString().padStart(2,'0');
+    document.getElementById('lsTime').textContent = `${h}:${m}`;
+    document.getElementById('lsDate').textContent = now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  }
+  tick();
+  lsClockInterval = setInterval(tick, 10000);
+}
+
+async function fetchLockWeather() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const {latitude: lat, longitude: lon} = pos.coords;
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=kmh`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const c = data.current;
+      const icon = WX_ICONS[c.weather_code] || '🌤';
+      document.getElementById('lsWeatherIcon').textContent = icon;
+      document.getElementById('lsTemp').textContent = `${Math.round(c.temperature_2m)}°`;
+      document.getElementById('lsWeatherDesc').textContent = weatherDesc(c.weather_code);
+      document.getElementById('lsHumidity').textContent = `💧 ${c.relative_humidity_2m}%`;
+      document.getElementById('lsFeels').textContent = `Feels ${Math.round(c.apparent_temperature)}°`;
+      document.getElementById('lsWind').textContent = `💨 ${Math.round(c.wind_speed_10m)} km/h`;
+      document.getElementById('lsWeather').style.display = 'flex';
+    } catch(e) { console.log('Weather error', e); }
+  }, () => {});
+}
+
+function weatherDesc(code) {
+  const map = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
+  return map[code] || 'Clear';
+}
+
+function updateLockCards() {
+  // Next event
+  const now = new Date();
+  const upcoming = calendarEvents.filter(e => {
+    if (!e.start?.dateTime) return false;
+    return new Date(e.start.dateTime) > now;
+  }).sort((a,b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
+
+  if (upcoming.length > 0) {
+    const ev = upcoming[0];
+    const t = new Date(ev.start.dateTime);
+    const timeStr = t.toLocaleDateString('en-GB',{weekday:'short'}) + ' ' + t.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lsEventTitle').textContent = ev.summary || '(no title)';
+    document.getElementById('lsEventTime').textContent = timeStr;
+    document.getElementById('lsEventCard').style.display = 'block';
+  }
+
+  // Habit summary
+  const today = todayDayIndex();
+  const total = habits.length;
+  const done = habits.filter(h => h.doneBy && h.doneBy[today]).length;
+  if (total > 0) {
+    document.getElementById('lsHabitCount').textContent = `${done}/${total}`;
+    document.getElementById('lsProgressFill').style.width = `${Math.round(done/total*100)}%`;
+    document.getElementById('lsHabitCard').style.display = 'block';
+  }
+}
+
+function unlockScreen() {
+  document.getElementById('lockScreen').classList.add('hidden');
+  clearInterval(lsClockInterval);
+  lsClockInterval = null;
+}
+
+function showLockScreen() {
+  document.getElementById('lockScreen').classList.remove('hidden');
+  if (!lsClockInterval) startLockClock();
+  fetchLockWeather();
+  updateLockCards();
+}
+
+window.addEventListener('load', () => { showLockScreen(); });
+
 init();
 </script>
 </body>
