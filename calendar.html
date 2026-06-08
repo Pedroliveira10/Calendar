@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Pedro's Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: #666;
+    --accent: #c8f060;
+    --accent2: #60c8f0;
+    --accent3: #f060a8;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); }
+
+  #app { display: flex; flex-direction: column; height: 100vh; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; }
+
+  /* AUTH SCREEN */
+  #authScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem; gap: 2rem; }
+  .auth-logo { font-size: 56px; font-weight: 700; color: var(--accent); letter-spacing: -3px; line-height: 1; }
+  .auth-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .auth-btn { background: var(--accent); color: #0f0f0f; border: none; padding: 14px 32px; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 2px; letter-spacing: 1px; text-transform: uppercase; transition: opacity 0.2s; width: 100%; }
+  .auth-btn:hover { opacity: 0.85; }
+  .auth-note { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: center; line-height: 1.6; }
+
+  /* TOPBAR */
+  #topbar { padding: 16px 20px 0; display: none; }
+  .tb-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .tb-month { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .tb-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn { background: var(--surface); border: 0.5px solid var(--border); color: var(--muted); width: 36px; height: 36px; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; }
+  .icon-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* WEEK STRIP */
+  .week-strip { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .wday { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 2px; cursor: pointer; border-radius: 2px; transition: background 0.15s; }
+  .wday:hover { background: var(--surface); }
+  .wday-name { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .wday-num { font-size: 15px; font-weight: 600; color: var(--muted); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 2px; transition: all 0.15s; }
+  .wday.selected .wday-num { background: var(--accent); color: #0f0f0f; }
+  .wday.today:not(.selected) .wday-num { color: var(--accent); }
+  .wday-dots { display: flex; gap: 2px; height: 5px; }
+  .wdot { width: 4px; height: 4px; border-radius: 50%; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 0.5px solid var(--border); margin: 0 20px; display: none; }
+  .tab { flex: 1; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 10px 0; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 1.5px solid transparent; transition: all 0.15s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* CONTENT */
+  #content { flex: 1; overflow-y: auto; padding: 0 20px 100px; display: none; }
+  #content::-webkit-scrollbar { width: 2px; }
+  #content::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* DAY VIEW */
+  .day-header { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; padding: 14px 0 8px; }
+  .time-row { display: flex; gap: 12px; min-height: 40px; }
+  .time-lbl { font-family: var(--mono); font-size: 10px; color: var(--muted); min-width: 36px; padding-top: 4px; }
+  .time-col { flex: 1; border-top: 0.5px solid var(--border); padding-top: 4px; }
+  .ev-card { border-left: 2px solid; padding: 5px 10px; margin-bottom: 4px; border-radius: 0 2px 2px 0; cursor: pointer; transition: background 0.15s; }
+  .ev-card:hover { background: var(--surface2); }
+  .ev-title { font-size: 12px; font-weight: 600; }
+  .ev-meta { font-family: var(--mono); font-size: 10px; margin-top: 2px; opacity: 0.6; }
+  .no-events { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: center; padding: 40px 0; }
+
+  /* HABITS VIEW */
+  .habit-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 0.5px solid var(--border); }
+  .habit-info { display: flex; align-items: center; gap: 10px; }
+  .habit-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .habit-name { font-size: 13px; font-weight: 600; }
+  .habit-streak { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .habit-checks { display: flex; gap: 4px; }
+  .hcheck { width: 22px; height: 22px; border-radius: 2px; border: 0.5px solid var(--border); font-family: var(--mono); font-size: 9px; display: flex; align-items: center; justify-content: center; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .hcheck.done { border-color: transparent; }
+  .add-habit-btn { margin-top: 16px; background: none; border: 0.5px dashed var(--border); color: var(--muted); width: 100%; padding: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; cursor: pointer; border-radius: 2px; transition: all 0.15s; }
+  .add-habit-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* FAB */
+  #fab { position: fixed; bottom: 28px; right: calc(50% - 215px + 20px); width: 52px; height: 52px; background: var(--accent); border: none; border-radius: 2px; font-size: 24px; color: #0f0f0f; cursor: pointer; display: none; align-items: center; justify-content: center; font-weight: 700; transition: transform 0.15s; z-index: 100; }
+  #fab:hover { transform: scale(1.05); }
+
+  /* MODAL */
+  #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: flex-end; justify-content: center; }
+  #modal.open { display: flex; }
+  .modal-sheet { background: var(--surface); border-radius: 4px 4px 0 0; width: 100%; max-width: 430px; padding: 24px 20px 40px; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .field input, .field select { background: var(--surface2); border: 0.5px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 14px; padding: 10px 12px; width: 100%; border-radius: 2px; outline: none; }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .color-row { display: flex; gap: 8px; }
+  .color-chip { width: 28px; height: 28px; border-radius: 2px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
+  .color-chip.sel { border-color: #fff; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-primary { flex: 1; background: var(--accent); color: #0f0f0f; border: none; padding: 12px; font-family: var(--sans); font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 2px; }
+  .btn-cancel { background: none; border: 0.5px solid var(--border); color: var(--muted); padding: 12px 20px; font-family: var(--sans); font-size: 13px; cursor: pointer; border-radius: 2px; }
+
+  /* LOADING */
+  #loading { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 300; }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tabs { display: none; }
+  .tabs.show { display: flex; }
+  #topbar.show { display: block; }
+  #content.show { display: block; }
+  #fab.show { display: flex; }
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div></div>
+
+<div id="app">
+  <!-- AUTH -->
+  <div id="authScreen">
+    <div>
+      <div class="auth-logo">CAL.</div>
+      <div class="auth-sub" style="margin-top:6px;">Pedro · Personal Dashboard</div>
+    </div>
+    <button class="auth-btn" onclick="signIn()">Connect Google Calendar</button>
+    <div class="auth-note">
+      Signs in with your Google account.<br>
+      Only reads/writes your own calendar.<br>
+      pedrofsoliveira1999@gmail.com
+    </div>
+  </div>
+
+  <!-- MAIN UI -->
+  <div id="topbar">
+    <div class="tb-row1">
+      <div class="tb-month" id="monthLabel">June 2026</div>
+      <div class="tb-actions">
+        <button class="icon-btn" onclick="prevWeek()">‹</button>
+        <button class="icon-btn" onclick="nextWeek()">›</button>
+        <button class="icon-btn" onclick="signOut()" title="Sign out">⏏</button>
+      </div>
+    </div>
+    <div class="week-strip" id="weekStrip"></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" id="tabSchedule" onclick="switchTab('schedule')">Schedule</div>
+    <div class="tab" id="tabHabits" onclick="switchTab('habits')">Habits</div>
+  </div>
+
+  <div id="content">
+    <div id="scheduleView"></div>
+    <div id="habitsView" style="display:none;"></div>
+  </div>
+
+  <button id="fab" onclick="openModal()">+</button>
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div id="modal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="modalTitle">New Event</div>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="evTitle" placeholder="What?">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="evDate">
+    </div>
+    <div class="field">
+      <label>Time (leave blank for all-day)</label>
+      <input type="time" id="evTime">
+    </div>
+    <div class="field">
+      <label>Duration</label>
+      <select id="evDur">
+        <option value="30">30 min</option>
+        <option value="60" selected>1 hour</option>
+        <option value="90">1.5 hours</option>
+        <option value="120">2 hours</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Color</label>
+      <div class="color-row" id="colorRow">
+        <div class="color-chip sel" style="background:#c8f060" data-color="1" onclick="selectColor(this,'#c8f060','1')"></div>
+        <div class="color-chip" style="background:#60c8f0" data-color="7" onclick="selectColor(this,'#60c8f0','7')"></div>
+        <div class="color-chip" style="background:#f060a8" data-color="4" onclick="selectColor(this,'#f060a8','4')"></div>
+        <div class="color-chip" style="background:#f0a060" data-color="6" onclick="selectColor(this,'#f0a060','6')"></div>
+        <div class="color-chip" style="background:#a060f0" data-color="3" onclick="selectColor(this,'#a060f0','3')"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEvent()">Save to Google Calendar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID = '292126261971-v33ko726ib2o3ltatigo2ktd7i36l20h.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/calendar';
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const COLORS = {'1':'#c8f060','2':'#60c8f0','3':'#a060f0','4':'#f060a8','5':'#60f090','6':'#f0a060','7':'#60c8f0','8':'#888','9':'#60c8f0','10':'#60f0d8','11':'#f06060'};
+
+let tokenClient, accessToken = null;
+let weekStart = getWeekStart(new Date());
+let selectedDate = new Date();
+let currentTab = 'schedule';
+let selectedColor = '#c8f060';
+let selectedColorId = '1';
+let calendarEvents = [];
+let habits = JSON.parse(localStorage.getItem('habits') || '[]');
+
+function getWeekStart(d) {
+  const s = new Date(d);
+  const day = s.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  s.setDate(s.getDate() + diff);
+  s.setHours(0,0,0,0);
+  return s;
+}
+
+function fmt(d) { return d.toISOString().split('T')[0]; }
+
+function loadGIS() {
+  return new Promise(resolve => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = resolve;
+    document.head.appendChild(s);
+  });
+}
+
+async function init() {
+  await loadGIS();
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) return;
+      accessToken = resp.access_token;
+      localStorage.setItem('gtoken', accessToken);
+      showMain();
+      await loadEvents();
+    }
+  });
+  const saved = localStorage.getItem('gtoken');
+  if (saved) {
+    accessToken = saved;
+    showMain();
+    await loadEvents();
+  }
+  document.getElementById('loading').style.display = 'none';
+}
+
+function signIn() {
+  tokenClient.requestAccessToken();
+}
+
+function signOut() {
+  accessToken = null;
+  localStorage.removeItem('gtoken');
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('topbar').classList.remove('show');
+  document.getElementById('tabs').classList.remove('show');
+  document.getElementById('content').classList.remove('show');
+  document.getElementById('fab').classList.remove('show');
+}
+
+function showMain() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('topbar').classList.add('show');
+  document.getElementById('tabs').classList.add('show');
+  document.getElementById('content').classList.add('show');
+  document.getElementById('fab').classList.add('show');
+  renderWeek();
+  renderSchedule();
+  renderHabits();
+}
+
+async function loadEvents() {
+  if (!accessToken) return;
+  const start = new Date(weekStart);
+  const end = new Date(weekStart);
+  end.setDate(end.getDate() + 7);
+  const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&singleEvents=true&orderBy=startTime`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (res.status === 401) { accessToken = null; localStorage.removeItem('gtoken'); return; }
+  const data = await res.json();
+  calendarEvents = data.items || [];
+  renderWeek();
+  renderSchedule();
+}
+
+function renderWeek() {
+  const strip = document.getElementById('weekStrip');
+  strip.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mid = new Date(weekStart); mid.setDate(mid.getDate() + 3);
+  document.getElementById('monthLabel').textContent = mid.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+    const isToday = d.toDateString() === today.toDateString();
+    const isSel = d.toDateString() === selectedDate.toDateString();
+    const dayEvs = calendarEvents.filter(e => {
+      const s = e.start?.dateTime || e.start?.date || '';
+      return s.startsWith(fmt(d));
+    });
+    const col = document.createElement('div');
+    col.className = 'wday' + (isSel ? ' selected' : '') + (isToday ? ' today' : '');
+    col.onclick = () => { selectedDate = new Date(d); renderWeek(); renderSchedule(); };
+    col.innerHTML = `
+      <span class="wday-name">${DAYS[d.getDay()]}</span>
+      <span class="wday-num">${d.getDate()}</span>
+      <div class="wday-dots">${dayEvs.slice(0,3).map(e => {
+        const c = e.colorId ? (COLORS[e.colorId] || '#888') : '#c8f060';
+        return `<div class="wdot" style="background:${c}"></div>`;
+      }).join('')}</div>`;
+    strip.appendChild(col);
+  }
+}
+
+function renderSchedule() {
+  const view = document.getElementById('scheduleView');
+  const dayEvs = calendarEvents.filter(e => {
+    const s = e.start?.dateTime || e.start?.date || '';
+    return s.startsWith(fmt(selectedDate));
+  }).sort((a,b) => (a.start?.dateTime||a.start?.date) > (b.start?.dateTime||b.start?.date) ? 1 : -1);
+
+  const label = selectedDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  let html = `<div class="day-header">${label}</div>`;
+
+  if (dayEvs.length === 0) {
+    html += `<div class="no-events">No events — enjoy the quiet.</div>`;
+  } else {
+    const hours = [];
+    for (let h = 7; h <= 22; h++) hours.push(h);
+    hours.forEach(h => {
+      const hStr = h.toString().padStart(2,'0') + ':00';
+      const ev = dayEvs.find(e => {
+        if (!e.start?.dateTime) return false;
+        const evH = parseInt(e.start.dateTime.split('T')[1].split(':')[0]);
+        return evH === h;
+      });
+      html += `<div class="time-row">
+        <span class="time-lbl">${hStr}</span>
+        <div class="time-col">${ev ? evCard(ev) : ''}</div>
+      </div>`;
+    });
+  }
+  view.innerHTML = html;
+}
+
+function evCard(ev) {
+  const c = ev.colorId ? (COLORS[ev.colorId] || '#c8f060') : '#c8f060';
+  const time = ev.start?.dateTime ? ev.start.dateTime.split('T')[1].slice(0,5) : 'All day';
+  return `<div class="ev-card" style="border-color:${c}">
+    <div class="ev-title" style="color:${c}">${ev.summary || '(no title)'}</div>
+    <div class="ev-meta">${time}${ev.location ? ' · ' + ev.location : ''}</div>
+  </div>`;
+}
+
+function renderHabits() {
+  const view = document.getElementById('habitsView');
+  const dayLabels = ['M','T','W','T','F','S','S'];
+  let html = '';
+  if (habits.length === 0) {
+    html = `<div class="no-events" style="padding-top:30px;">No habits yet.<br>Add your first one below.</div>`;
+  }
+  habits.forEach((h, idx) => {
+    const streak = calcStreak(h);
+    html += `<div class="habit-row">
+      <div class="habit-info">
+        <div class="habit-dot" style="background:${h.color}"></div>
+        <div>
+          <div class="habit-name">${h.name}</div>
+          <div class="habit-streak">${streak} day streak</div>
+        </div>
+      </div>
+      <div class="habit-checks">
+        ${h.days.map((done,i) => `<div class="hcheck${done?' done':''}" style="${done?'background:'+h.color+';color:#0f0f0f':''}" onclick="toggleHabit(${idx},${i})">${dayLabels[i]}</div>`).join('')}
+      </div>
+    </div>`;
+  });
+  html += `<button class="add-habit-btn" onclick="openHabitModal()">+ Add habit</button>`;
+  view.innerHTML = html;
+}
+
+function calcStreak(h) {
+  let s = 0;
+  for (let i = h.days.length - 1; i >= 0; i--) {
+    if (h.days[i]) s++; else break;
+  }
+  return s;
+}
+
+function toggleHabit(idx, day) {
+  habits[idx].days[day] = habits[idx].days[day] ? 0 : 1;
+  localStorage.setItem('habits', JSON.stringify(habits));
+  renderHabits();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabSchedule').className = 'tab' + (tab === 'schedule' ? ' active' : '');
+  document.getElementById('tabHabits').className = 'tab' + (tab === 'habits' ? ' active' : '');
+  document.getElementById('scheduleView').style.display = tab === 'schedule' ? 'block' : 'none';
+  document.getElementById('habitsView').style.display = tab === 'habits' ? 'block' : 'none';
+}
+
+function prevWeek() { weekStart.setDate(weekStart.getDate()-7); loadEvents(); }
+function nextWeek() { weekStart.setDate(weekStart.getDate()+7); loadEvents(); }
+
+let isHabitModal = false;
+function openModal() {
+  isHabitModal = false;
+  document.getElementById('modalTitle').textContent = 'New Event';
+  document.getElementById('evDate').value = fmt(selectedDate);
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('evDur').style.display = 'block';
+  document.querySelector('[for="evDur"]') && (document.querySelector('.field:nth-child(4)').style.display='block');
+}
+
+function openHabitModal() {
+  isHabitModal = true;
+  document.getElementById('modalTitle').textContent = 'New Habit';
+  document.getElementById('evDate').value = '';
+  document.getElementById('evTime').value = '';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function selectColor(el, color, id) {
+  document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedColor = color;
+  selectedColorId = id;
+}
+
+async function saveEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  if (!title) { alert('Add a title'); return; }
+
+  if (isHabitModal) {
+    habits.push({ name: title, color: selectedColor, days: [0,0,0,0,0,0,0] });
+    localStorage.setItem('habits', JSON.stringify(habits));
+    renderHabits();
+    closeModal();
+    switchTab('habits');
+    return;
+  }
+
+  const date = document.getElementById('evDate').value;
+  const time = document.getElementById('evTime').value;
+  const dur = parseInt(document.getElementById('evDur').value);
+
+  let body;
+  if (time) {
+    const start = new Date(`${date}T${time}`);
+    const end = new Date(start.getTime() + dur * 60000);
+    body = {
+      summary: title, colorId: selectedColorId,
+      start: { dateTime: start.toISOString(), timeZone: 'Europe/Amsterdam' },
+      end: { dateTime: end.toISOString(), timeZone: 'Europe/Amsterdam' }
+    };
+  } else {
+    body = {
+      summary: title, colorId: selectedColorId,
+      start: { date }, end: { date }
+    };
+  }
+
+  await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  closeModal();
+  document.getElementById('evTitle').value = '';
+  await loadEvents();
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
