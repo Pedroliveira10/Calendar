@@ -28,7 +28,6 @@
   html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   #app { display: flex; flex-direction: column; height: 100vh; max-width: 430px; margin: 0 auto; overflow: hidden; background: var(--bg); }
 
-  /* AUTH */
   #authScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2.5rem; gap: 2rem; }
   .auth-icon { width: 72px; height: 72px; background: var(--surface); border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 12px rgba(0,0,0,0.08); font-size: 36px; }
   .auth-title { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; text-align: center; }
@@ -37,14 +36,12 @@
   .auth-btn:active { opacity: 0.8; }
   .auth-note { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
 
-  /* TOPBAR */
   #topbar { padding: 20px 20px 0; display: none; background: var(--bg); }
   .tb-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
   .tb-month { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
   .tb-actions { display: flex; gap: 6px; }
   .icon-btn { background: var(--surface); border: none; color: var(--muted); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 
-  /* WEEK STRIP */
   .week-strip { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
   .wday { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px; cursor: pointer; border-radius: var(--radius-sm); }
   .wday-name { font-size: 10px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -54,56 +51,50 @@
   .wday-dots { display: flex; gap: 2px; height: 5px; }
   .wdot { width: 4px; height: 4px; border-radius: 50%; }
 
-  /* TABS */
   .tabs { display: none; margin: 14px 20px 0; background: rgba(0,0,0,0.06); border-radius: 980px; padding: 2px; }
   .tabs.show { display: flex; }
   .tab { flex: 1; font-size: 13px; font-weight: 500; padding: 7px 0; text-align: center; cursor: pointer; color: var(--muted); border-radius: 980px; transition: all 0.2s; }
   .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
 
-  /* CONTENT */
   #content { flex: 1; overflow-y: auto; padding: 0 20px 100px; display: none; margin-top: 14px; }
   #content::-webkit-scrollbar { display: none; }
 
-  /* SECTION LABELS */
   .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 14px 0 8px; }
-
-  /* DAY VIEW */
   .day-header { font-size: 13px; font-weight: 500; color: var(--muted); padding: 4px 0 12px; }
   .time-row { display: flex; gap: 12px; min-height: 44px; }
   .time-lbl { font-size: 11px; color: var(--muted); min-width: 36px; padding-top: 2px; }
   .time-col { flex: 1; border-top: 0.5px solid var(--border); padding-top: 4px; }
-  .ev-card { background: var(--surface); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 4px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 3px solid; position: relative; }
+  .ev-card { background: var(--surface); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 4px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 3px solid; }
   .ev-title { font-size: 13px; font-weight: 500; color: var(--text); }
   .ev-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .ev-done-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 980px; margin-top: 4px; }
   .no-events { font-size: 14px; color: var(--muted); text-align: center; padding: 32px 0; }
 
-  /* QUICK ITEM CARDS (reminders, birthdays, exercises) */
-  .quick-card { background: var(--surface); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
+  .quick-card { background: var(--surface); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; cursor: pointer; }
   .quick-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
   .quick-info { flex: 1; }
   .quick-title { font-size: 14px; font-weight: 500; color: var(--text); }
   .quick-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .quick-done-btn { background: none; border: 1.5px solid var(--border2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; transition: all 0.15s; }
+  .quick-done-btn { background: none; border: 1.5px solid var(--border2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
   .quick-done-btn.done { border-color: transparent; }
 
-  /* HABITS VIEW */
+  /* HABITS */
   .habit-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-  .habit-row { display: flex; align-items: center; justify-content: space-between; }
+  .habit-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .habit-info { display: flex; align-items: center; gap: 10px; }
   .habit-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .habit-name { font-size: 14px; font-weight: 500; }
-  .habit-streak { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .habit-checks { display: flex; gap: 5px; }
-  .hcheck { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border2); font-size: 9px; display: flex; align-items: center; justify-content: center; color: var(--muted); cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .habit-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .habit-streak-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 980px; background: var(--surface2); color: var(--muted); }
+  .habit-week { display: flex; gap: 4px; justify-content: space-between; }
+  .hcheck { flex: 1; height: 28px; border-radius: 6px; border: 1.5px solid var(--border2); font-size: 9px; display: flex; align-items: center; justify-content: center; color: var(--muted); cursor: pointer; transition: all 0.15s; font-weight: 600; }
   .hcheck.done { border-color: transparent; color: #fff; }
+  .hcheck.inactive { opacity: 0.25; cursor: default; }
   .add-habit-btn { background: var(--surface); border: none; color: var(--accent); width: 100%; padding: 14px; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius); box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-top: 4px; }
 
-  /* FAB */
-  #fab { position: fixed; bottom: 32px; right: calc(50% - 215px + 20px); width: 52px; height: 52px; background: var(--accent); border: none; border-radius: 50%; font-size: 24px; color: #fff; cursor: pointer; display: none; align-items: center; justify-content: center; font-weight: 300; box-shadow: 0 4px 16px rgba(0,113,227,0.4); z-index: 100; transition: transform 0.15s; }
+  #fab { position: fixed; bottom: 32px; right: calc(50% - 215px + 20px); width: 52px; height: 52px; background: var(--accent); border: none; border-radius: 50%; font-size: 24px; color: #fff; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,113,227,0.4); z-index: 100; transition: transform 0.15s; }
   #fab:active { transform: scale(0.95); }
 
-  /* MODAL */
   #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
   #modal.open { display: flex; }
   .modal-sheet { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-width: 430px; padding: 8px 20px 44px; max-height: 90vh; overflow-y: auto; }
@@ -112,25 +103,27 @@
   .field { margin-bottom: 12px; }
   .field label { font-size: 12px; color: var(--muted); font-weight: 500; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
   .field input, .field select { background: var(--surface2); border: none; color: var(--text); font-family: var(--sans); font-size: 15px; padding: 12px 14px; width: 100%; border-radius: var(--radius-sm); outline: none; -webkit-appearance: none; }
-  .field input:focus { box-shadow: 0 0 0 3px rgba(0,113,227,0.2); }
   .color-row { display: flex; gap: 10px; }
   .color-chip { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border-color 0.15s, transform 0.1s; }
   .color-chip.sel { border-color: var(--text); transform: scale(1.1); }
+
+  /* Day picker for specific days */
+  .day-picker { display: flex; gap: 6px; }
+  .dp-day { flex: 1; padding: 8px 0; text-align: center; border-radius: 6px; border: 1.5px solid var(--border2); font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .dp-day.sel { border-color: var(--accent); background: #e8f0fe; color: var(--accent); }
+
   .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
   .btn-primary { flex: 1; background: var(--accent); color: #fff; border: none; padding: 14px; font-family: var(--sans); font-weight: 500; font-size: 15px; cursor: pointer; border-radius: 980px; }
   .btn-cancel { background: var(--surface2); border: none; color: var(--text); padding: 14px 20px; font-family: var(--sans); font-size: 15px; cursor: pointer; border-radius: 980px; }
 
-  /* WHO DID IT POPUP */
   #whoModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
   #whoModal.open { display: flex; }
   .who-sheet { background: var(--surface); border-radius: 20px; padding: 24px 20px; width: 280px; text-align: center; }
   .who-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
   .who-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
   .who-btns { display: flex; gap: 10px; }
-  .who-btn { flex: 1; padding: 14px; border: none; border-radius: 980px; font-family: var(--sans); font-size: 15px; font-weight: 600; cursor: pointer; color: #fff; transition: opacity 0.15s; }
-  .who-btn:active { opacity: 0.8; }
+  .who-btn { flex: 1; padding: 14px; border: none; border-radius: 980px; font-family: var(--sans); font-size: 15px; font-weight: 600; cursor: pointer; color: #fff; }
 
-  /* LOADING */
   #loading { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 400; }
   .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -225,6 +218,27 @@
         <div class="color-chip" style="background:#af52de" onclick="selectColor(this,'#af52de','3')"></div>
       </div>
     </div>
+    <!-- HABIT FREQUENCY -->
+    <div class="field" id="freqField" style="display:none;">
+      <label>Frequency</label>
+      <select id="habitFreq" onchange="onFreqChange()">
+        <option value="daily">Every day</option>
+        <option value="every2">Every 2 days</option>
+        <option value="specific">Specific days</option>
+      </select>
+    </div>
+    <div class="field" id="specificDaysField" style="display:none;">
+      <label>Pick days</label>
+      <div class="day-picker">
+        <div class="dp-day" data-d="1" onclick="toggleDay(this)">M</div>
+        <div class="dp-day" data-d="2" onclick="toggleDay(this)">T</div>
+        <div class="dp-day" data-d="3" onclick="toggleDay(this)">W</div>
+        <div class="dp-day" data-d="4" onclick="toggleDay(this)">T</div>
+        <div class="dp-day" data-d="5" onclick="toggleDay(this)">F</div>
+        <div class="dp-day" data-d="6" onclick="toggleDay(this)">S</div>
+        <div class="dp-day" data-d="0" onclick="toggleDay(this)">S</div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-primary" onclick="saveEvent()">Save</button>
@@ -248,8 +262,9 @@
 const CLIENT_ID = '292126261971-v33ko726ib2o3ltatigo2ktd7i36l20h.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_LABELS = ['M','T','W','T','F','S','S'];
 const GCAL_COLORS = {'1':'#0071e3','2':'#34c759','3':'#af52de','4':'#ff2d55','5':'#34c759','6':'#ff9500','7':'#0071e3','8':'#8e8e93','9':'#5ac8fa','10':'#32ade6','11':'#ff3b30'};
-const TYPE_ICONS = {event:'📅',reminder:'🔔',birthday:'🎂',exercise:'💪',habit:'✅'};
+const TYPE_ICONS = {event:'📅',reminder:'🔔',birthday:'🎂',exercise:'💪'};
 const TYPE_BG = {event:'#f0f4ff',reminder:'#fff7ed',birthday:'#fdf2fb',exercise:'#f0fdf4'};
 
 let tokenClient, accessToken = null;
@@ -271,6 +286,35 @@ function getWeekStart(d) {
   return s;
 }
 function fmt(d) { return d.toISOString().split('T')[0]; }
+
+// Returns which of the 7 week days (Mon=0..Sun=6) a habit should be active on
+function habitActiveDays(habit) {
+  if (habit.freq === 'daily') return [0,1,2,3,4,5,6];
+  if (habit.freq === 'specific') return habit.specificDays || [];
+  if (habit.freq === 'every2') {
+    // anchor from habit creation date, alternate days
+    const start = new Date(habit.createdDate || fmt(new Date()));
+    const active = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+      const diff = Math.round((d - start) / 86400000);
+      if (diff >= 0 && diff % 2 === 0) active.push(i);
+      else if (diff < 0 && Math.abs(diff) % 2 === 0) active.push(i);
+    }
+    return active;
+  }
+  return [0,1,2,3,4,5,6];
+}
+
+function freqLabel(habit) {
+  if (habit.freq === 'every2') return 'Every 2 days';
+  if (habit.freq === 'specific') {
+    const names = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const days = (habit.specificDays || []).map(d => names[d]);
+    return days.join(', ') || 'No days set';
+  }
+  return 'Every day';
+}
 
 function loadGIS() {
   return new Promise(resolve => {
@@ -303,7 +347,6 @@ function signOut() {
   document.getElementById('authScreen').style.display = 'flex';
   ['topbar','tabs','content','fab'].forEach(id => document.getElementById(id).classList.remove('show'));
 }
-
 function showMain() {
   document.getElementById('authScreen').style.display = 'none';
   ['topbar','tabs','content','fab'].forEach(id => document.getElementById(id).classList.add('show'));
@@ -320,6 +363,10 @@ async function loadEvents() {
   const data = await res.json();
   calendarEvents = data.items || [];
   renderWeek(); renderSchedule();
+}
+
+function typeColor(type) {
+  return {event:'#0071e3',reminder:'#ff9500',birthday:'#af52de',exercise:'#34c759'}[type]||'#0071e3';
 }
 
 function renderWeek() {
@@ -344,26 +391,19 @@ function renderWeek() {
   }
 }
 
-function typeColor(type) {
-  return {event:'#0071e3',reminder:'#ff9500',birthday:'#af52de',exercise:'#34c759',habit:'#0071e3'}[type]||'#0071e3';
-}
-
 function renderSchedule() {
   const view = document.getElementById('scheduleView');
   const dateStr = fmt(selectedDate);
   const label = selectedDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-
   const gcalEvs = calendarEvents.filter(e=>(e.start?.dateTime||e.start?.date||'').startsWith(dateStr))
     .sort((a,b)=>(a.start?.dateTime||a.start?.date)>(b.start?.dateTime||b.start?.date)?1:-1);
   const localEvs = localItems.filter(e => e.date === dateStr);
-
   const reminders = localEvs.filter(e=>e.type==='reminder');
   const birthdays = localEvs.filter(e=>e.type==='birthday');
   const exercises = localEvs.filter(e=>e.type==='exercise');
 
   let html = `<div class="day-header">${label}</div>`;
 
-  // Google Calendar events
   if (gcalEvs.length > 0) {
     html += `<div class="section-label">Events</div>`;
     for (let h = 7; h <= 22; h++) {
@@ -374,32 +414,15 @@ function renderSchedule() {
   } else {
     html += `<div class="no-events">No calendar events today</div>`;
   }
+  if (reminders.length) { html += `<div class="section-label">🔔 Reminders</div>`; reminders.forEach(r => { html += quickCard(r); }); }
+  if (birthdays.length) { html += `<div class="section-label">🎂 Birthdays</div>`; birthdays.forEach(b => { html += quickCard(b); }); }
+  if (exercises.length) { html += `<div class="section-label">💪 Exercise</div>`; exercises.forEach(e => { html += quickCard(e); }); }
 
-  // Reminders
-  if (reminders.length > 0) {
-    html += `<div class="section-label">🔔 Reminders</div>`;
-    reminders.forEach(r => { html += quickCard(r); });
-  }
-
-  // Birthdays
-  if (birthdays.length > 0) {
-    html += `<div class="section-label">🎂 Birthdays</div>`;
-    birthdays.forEach(b => { html += quickCard(b); });
-  }
-
-  // Exercises
-  if (exercises.length > 0) {
-    html += `<div class="section-label">💪 Exercise</div>`;
-    exercises.forEach(e => { html += quickCard(e); });
-  }
-
-  // Add buttons for today
   html += `<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
     <button onclick="openModalType('reminder')" style="background:var(--surface);border:none;color:#ff9500;font-size:12px;font-weight:500;padding:8px 12px;border-radius:980px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.08);">+ Reminder</button>
     <button onclick="openModalType('birthday')" style="background:var(--surface);border:none;color:#af52de;font-size:12px;font-weight:500;padding:8px 12px;border-radius:980px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.08);">+ Birthday</button>
     <button onclick="openModalType('exercise')" style="background:var(--surface);border:none;color:#34c759;font-size:12px;font-weight:500;padding:8px 12px;border-radius:980px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.08);">+ Exercise</button>
   </div>`;
-
   view.innerHTML = html;
 }
 
@@ -409,9 +432,7 @@ function evCard(ev) {
   const doneInfo = ev.doneBy ? `<div class="ev-done-badge" style="background:${ev.doneBy==='Pedro'?'#e8f0fe':'#fce4f3'};color:${ev.doneBy==='Pedro'?'#0071e3':'#e3008c'}">✓ ${ev.doneBy}</div>` : '';
   return `<div class="ev-card" style="border-color:${c}" onclick="askWho('gcal_${ev.id}')">
     <div class="ev-title">${ev.summary||'(no title)'}</div>
-    <div class="ev-meta" style="color:${c}">${time}${ev.location?' · '+ev.location:''}</div>
-    ${doneInfo}
-  </div>`;
+    <div class="ev-meta" style="color:${c}">${time}${ev.location?' · '+ev.location:''}</div>${doneInfo}</div>`;
 }
 
 function quickCard(item) {
@@ -420,26 +441,15 @@ function quickCard(item) {
   const doneInfo = item.doneBy ? `<div class="ev-done-badge" style="background:${item.doneBy==='Pedro'?'#e8f0fe':'#fce4f3'};color:${item.doneBy==='Pedro'?'#0071e3':'#e3008c'}">✓ ${item.doneBy}</div>` : '';
   return `<div class="quick-card" onclick="askWho('local_${item.id}')">
     <div class="quick-icon" style="background:${bg}">${TYPE_ICONS[item.type]||'📅'}</div>
-    <div class="quick-info">
-      <div class="quick-title">${item.title}</div>
-      ${item.time?`<div class="quick-sub">${item.time}</div>`:''}
-      ${doneInfo}
-    </div>
-    <button class="quick-done-btn${item.doneBy?' done':''}" style="${item.doneBy?'background:'+c:''}" onclick="event.stopPropagation();askWho('local_${item.id}')">
-      ${item.doneBy?'✓':'○'}
-    </button>
+    <div class="quick-info"><div class="quick-title">${item.title}</div>${item.time?`<div class="quick-sub">${item.time}</div>`:''}${doneInfo}</div>
+    <button class="quick-done-btn${item.doneBy?' done':''}" style="${item.doneBy?'background:'+c+';color:#fff;border-color:transparent':''}" onclick="event.stopPropagation();askWho('local_${item.id}')">${item.doneBy?'✓':'○'}</button>
   </div>`;
 }
 
-function askWho(itemId) {
-  pendingDoneId = itemId;
-  document.getElementById('whoModal').classList.add('open');
-}
-
+function askWho(itemId) { pendingDoneId = itemId; document.getElementById('whoModal').classList.add('open'); }
 function markDone(who) {
   document.getElementById('whoModal').classList.remove('open');
   if (!pendingDoneId) return;
-
   if (pendingDoneId.startsWith('local_')) {
     const id = pendingDoneId.replace('local_','');
     const item = localItems.find(i => i.id === id);
@@ -447,37 +457,59 @@ function markDone(who) {
   } else if (pendingDoneId.startsWith('gcal_')) {
     const id = pendingDoneId.replace('gcal_','');
     const ev = calendarEvents.find(e => e.id === id);
-    if (ev) { ev.doneBy = who; }
+    if (ev) ev.doneBy = who;
   }
-  pendingDoneId = null;
-  renderSchedule();
+  pendingDoneId = null; renderSchedule();
 }
-
-document.getElementById('whoModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('whoModal')) { document.getElementById('whoModal').classList.remove('open'); pendingDoneId = null; }
-});
+document.getElementById('whoModal').addEventListener('click', e => { if(e.target===document.getElementById('whoModal')){document.getElementById('whoModal').classList.remove('open');pendingDoneId=null;} });
 
 function renderHabits() {
   const view = document.getElementById('habitsView');
-  const dayLabels = ['M','T','W','T','F','S','S'];
-  let html = `<div class="section-label">This week</div>`;
+  let html = `<div class="section-label">Habits</div>`;
   if (habits.length === 0) html += `<div class="no-events">No habits yet.</div>`;
+
   habits.forEach((h, idx) => {
     const streak = calcStreak(h);
-    html += `<div class="habit-card"><div class="habit-row">
-      <div class="habit-info">
-        <div class="habit-dot" style="background:${h.color}"></div>
-        <div><div class="habit-name">${h.name}</div><div class="habit-streak">${streak} day streak</div></div>
+    const activeDays = habitActiveDays(h);
+    html += `<div class="habit-card">
+      <div class="habit-top">
+        <div class="habit-info">
+          <div class="habit-dot" style="background:${h.color}"></div>
+          <div>
+            <div class="habit-name">${h.name}</div>
+            <div class="habit-meta">${freqLabel(h)}</div>
+          </div>
+        </div>
+        <div class="habit-streak-badge">🔥 ${streak}</div>
       </div>
-      <div class="habit-checks">${h.days.map((done,i)=>`<div class="hcheck${done?' done':''}" style="${done?'background:'+h.color:''}" onclick="toggleHabit(${idx},${i})">${done?'✓':dayLabels[i]}</div>`).join('')}</div>
-    </div></div>`;
+      <div class="habit-week">
+        ${[0,1,2,3,4,5,6].map(i => {
+          const isActive = activeDays.includes(i);
+          const done = h.days[i];
+          return `<div class="hcheck${done?' done':''}${!isActive?' inactive':''}"
+            style="${done?'background:'+h.color+';border-color:'+h.color:''}"
+            onclick="${isActive?'toggleHabit('+idx+','+i+')':''}">
+            ${done?'✓':DAY_LABELS[i]}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
   });
+
   html += `<button class="add-habit-btn" onclick="openModalType('habit')">+ New Habit</button>`;
   view.innerHTML = html;
 }
 
-function calcStreak(h) { let s=0; for(let i=h.days.length-1;i>=0;i--){if(h.days[i])s++;else break;} return s; }
-function toggleHabit(idx,day) { habits[idx].days[day]=habits[idx].days[day]?0:1; localStorage.setItem('habits',JSON.stringify(habits)); renderHabits(); }
+function calcStreak(h) {
+  let s = 0;
+  for (let i = h.days.length - 1; i >= 0; i--) { if (h.days[i]) s++; else break; }
+  return s;
+}
+function toggleHabit(idx, day) {
+  habits[idx].days[day] = habits[idx].days[day] ? 0 : 1;
+  localStorage.setItem('habits', JSON.stringify(habits));
+  renderHabits();
+}
 
 function switchTab(tab) {
   currentTab = tab;
@@ -497,21 +529,28 @@ function openModalType(type) {
   document.getElementById('evTitle').value = '';
   document.getElementById('evTime').value = '';
   document.getElementById('modalTitle').textContent = type === 'habit' ? 'New Habit' : `New ${type.charAt(0).toUpperCase()+type.slice(1)}`;
+  document.querySelectorAll('.dp-day').forEach(d => d.classList.remove('sel'));
   onTypeChange();
   document.getElementById('modal').classList.add('open');
 }
 
 function onTypeChange() {
   const type = document.getElementById('evType').value;
-  const isHabit = type === 'habit';
-  const isEvent = type === 'event';
-  document.getElementById('timeField').style.display = isHabit ? 'none' : 'block';
-  document.getElementById('durField').style.display = isEvent ? 'block' : 'none';
-  document.getElementById('colorField').style.display = (isHabit || isEvent) ? 'block' : 'none';
+  document.getElementById('timeField').style.display = type === 'habit' ? 'none' : 'block';
+  document.getElementById('durField').style.display = type === 'event' ? 'block' : 'none';
+  document.getElementById('colorField').style.display = (type === 'habit' || type === 'event') ? 'block' : 'none';
+  document.getElementById('freqField').style.display = type === 'habit' ? 'block' : 'none';
+  document.getElementById('dateField').style.display = type === 'habit' ? 'none' : 'block';
+  onFreqChange();
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function onFreqChange() {
+  const freq = document.getElementById('habitFreq').value;
+  document.getElementById('specificDaysField').style.display = freq === 'specific' ? 'block' : 'none';
+}
 
+function toggleDay(el) { el.classList.toggle('sel'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
 function selectColor(el, color, id) {
   document.querySelectorAll('.color-chip').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel'); selectedColor=color; selectedColorId=id;
@@ -521,16 +560,20 @@ async function saveEvent() {
   const title = document.getElementById('evTitle').value.trim();
   if (!title) { alert('Add a title'); return; }
   const type = document.getElementById('evType').value;
-  const date = document.getElementById('evDate').value;
-  const time = document.getElementById('evTime').value;
 
   if (type === 'habit') {
-    habits.push({name:title,color:selectedColor,days:[0,0,0,0,0,0,0]});
-    localStorage.setItem('habits',JSON.stringify(habits));
+    const freq = document.getElementById('habitFreq').value;
+    const specificDays = freq === 'specific'
+      ? [...document.querySelectorAll('.dp-day.sel')].map(d => parseInt(d.dataset.d))
+      : [];
+    habits.push({ name: title, color: selectedColor, freq, specificDays, days: [0,0,0,0,0,0,0], createdDate: fmt(new Date()) });
+    localStorage.setItem('habits', JSON.stringify(habits));
     renderHabits(); closeModal(); switchTab('habits'); return;
   }
 
   if (type === 'event') {
+    const date = document.getElementById('evDate').value;
+    const time = document.getElementById('evTime').value;
     const dur = parseInt(document.getElementById('evDur').value);
     let body;
     if (time) {
@@ -544,9 +587,9 @@ async function saveEvent() {
     closeModal(); await loadEvents(); return;
   }
 
-  // local items: reminder, birthday, exercise
-  const item = { id: Date.now().toString(), type, title, date, time, doneBy: null };
-  localItems.push(item);
+  const date = document.getElementById('evDate').value;
+  const time = document.getElementById('evTime').value;
+  localItems.push({ id: Date.now().toString(), type, title, date, time, doneBy: null });
   localStorage.setItem('localItems', JSON.stringify(localItems));
   closeModal(); renderWeek(); renderSchedule();
 }
