@@ -99,21 +99,29 @@
   .quick-done-btn { background: none; border: 1.5px solid var(--border2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
 
   /* HABITS */
-  .habit-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-  .habit-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .habit-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .habit-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .habit-name { font-size: 14px; font-weight: 500; }
+  .cat-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-radius: var(--radius); margin-bottom: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); cursor: pointer; user-select: none; }
+  .cat-left { display: flex; align-items: center; gap: 10px; }
+  .cat-icon { font-size: 18px; }
+  .cat-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .cat-count { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .cat-chevron { color: var(--muted); font-size: 13px; transition: transform 0.2s; }
+  .cat-chevron.open { transform: rotate(90deg); }
+  .cat-body { display: none; padding: 0 0 8px 0; }
+  .cat-body.open { display: block; }
+  .habit-card { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 12px; }
+  .habit-check-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border2); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; transition: all 0.15s; }
+  .habit-check-btn.done-pedro { background: var(--pedro); border-color: var(--pedro); }
+  .habit-check-btn.done-amelia { background: var(--amelia); border-color: var(--amelia); }
+  .habit-info { flex: 1; min-width: 0; }
+  .habit-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; margin-right: 6px; vertical-align: middle; }
+  .habit-name { font-size: 14px; font-weight: 500; color: var(--text); }
   .habit-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .habit-right { display: flex; align-items: center; gap: 6px; }
   .habit-streak-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 980px; background: var(--surface2); color: var(--muted); white-space: nowrap; }
-  .habit-edit-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; }
-  .habit-week { display: flex; gap: 4px; justify-content: space-between; }
-  .hcheck { flex: 1; height: 28px; border-radius: 6px; border: 1.5px solid var(--border2); font-size: 9px; display: flex; align-items: center; justify-content: center; color: var(--muted); cursor: pointer; font-weight: 600; transition: all 0.15s; }
-  .hcheck.done-pedro { background: var(--pedro); border-color: var(--pedro); color: #fff; }
-  .hcheck.done-amelia { background: var(--amelia); border-color: var(--amelia); color: #fff; }
-  .hcheck.inactive { opacity: 0.25; cursor: default; }
+  .habit-edit-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 4px; }
   .add-habit-btn { background: var(--surface); border: none; color: var(--accent); width: 100%; padding: 14px; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius); box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-top: 4px; }
+  .add-cat-btn { background: none; border: 1.5px dashed var(--border2); color: var(--muted); width: 100%; padding: 12px; font-family: var(--sans); font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--radius); margin-top: 4px; }
+  .done-label { font-size: 11px; font-weight: 600; color: #fff; }
 
   /* STATS */
   #statsPanel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 250; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
@@ -297,6 +305,12 @@
         <option value="specific">Specific days</option>
       </select>
     </div>
+    <div class="field" id="catField" style="display:none;">
+      <label>Category</label>
+      <select id="habitCat">
+        <option value="">No category</option>
+      </select>
+    </div>
     <div class="field" id="specificDaysField" style="display:none;">
       <label>Pick days</label>
       <div class="day-picker">
@@ -348,7 +362,9 @@ let selectedColorId = '7';
 let calendarEvents = [];
 let localItems = JSON.parse(localStorage.getItem('localItems2') || '[]');
 let habits = JSON.parse(localStorage.getItem('habits2') || '[]');
+let categories = JSON.parse(localStorage.getItem('habitCats') || '[]');
 let pendingDoneId = null, pendingDoneType = 'task';
+let collapsedCats = JSON.parse(localStorage.getItem('collapsedCats') || '{}');
 let editingId = null, editingSource = null; // 'gcal' | 'local' | 'habit'
 
 function getWeekStart(d) {
@@ -602,11 +618,11 @@ function editHabit(idx){
   document.getElementById('habitFreq').value=h.freq||'daily';
   document.getElementById('modalTitle').textContent='Edit Habit';
   document.getElementById('modalActions').innerHTML=`<button class="btn-delete" onclick="deleteHabit(${idx})">Delete</button><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveEvent()">Save</button>`;
-  // restore specific days
   document.querySelectorAll('.dp-day').forEach(d=>{d.classList.toggle('sel',(h.specificDays||[]).includes(parseInt(d.dataset.d)));});
-  // restore color
   document.querySelectorAll('.color-chip').forEach(c=>{c.classList.remove('sel');if(c.style.background===h.color||c.style.backgroundColor===h.color)c.classList.add('sel');});
-  selectedColor=h.color; onTypeChange(); document.getElementById('modal').classList.add('open');
+  selectedColor=h.color;
+  populateCatSelect(h.cat||'');
+  onTypeChange(); document.getElementById('modal').classList.add('open');
 }
 function deleteHabit(idx){
   if(!confirm('Delete this habit?')) return;
@@ -637,35 +653,129 @@ function markDone(who){
 }
 document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal')){document.getElementById('whoModal').classList.remove('open');pendingDoneId=null;}});
 
-function renderHabits(){
-  const view=document.getElementById('habitsView');
-  let html=`<div class="section-label">Habits</div>`;
-  if(habits.length===0) html+=`<div class="no-events">No habits yet.</div>`;
-  habits.forEach((h,idx)=>{
-    const streak=calcStreak(h); const activeDays=habitActiveDays(h);
-    html+=`<div class="habit-card">
-      <div class="habit-top">
-        <div class="habit-info">
-          <div class="habit-dot" style="background:${h.color}"></div>
-          <div><div class="habit-name">${h.name}</div><div class="habit-meta">${freqLabel(h)}</div></div>
-        </div>
-        <div class="habit-right">
-          <div class="habit-streak-badge">🔥 ${streak}</div>
-          <button class="habit-edit-btn" onclick="editHabit(${idx})">✏️</button>
+function todayDayIndex() {
+  const d = new Date().getDay();
+  return d === 0 ? 6 : d - 1; // Mon=0..Sun=6
+}
+
+function renderHabits() {
+  const view = document.getElementById('habitsView');
+  const today = todayDayIndex();
+  let html = `<div class="section-label">Habits</div>`;
+
+  // Uncategorized habits
+  const uncategorized = habits.filter(h => !h.cat);
+  if (uncategorized.length > 0) {
+    uncategorized.forEach((h, _) => {
+      const idx = habits.indexOf(h);
+      html += habitCardHTML(h, idx, today);
+    });
+  }
+
+  // Categories
+  categories.forEach((cat, ci) => {
+    const catHabits = habits.filter(h => h.cat === cat.id);
+    const doneCount = catHabits.filter(h => {
+      const db = h.doneBy ? h.doneBy[today] : null;
+      return !!db;
+    }).length;
+    const isOpen = !collapsedCats[cat.id];
+    html += `<div class="cat-header" onclick="toggleCat('${cat.id}')">
+      <div class="cat-left">
+        <span class="cat-icon">${cat.icon||'📁'}</span>
+        <div>
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-count">${doneCount}/${catHabits.length} done today</div>
         </div>
       </div>
-      <div class="habit-week">
-        ${[0,1,2,3,4,5,6].map(i=>{
-          const isActive=activeDays.includes(i); const doneBy=h.doneBy?h.doneBy[i]:null;
-          const doneClass=doneBy==='Pedro'?'done-pedro':doneBy==='Amelia'?'done-amelia':'';
-          return `<div class="hcheck ${doneClass}${!isActive?' inactive':''}" onclick="${isActive?`askWho('habit_${idx}_${i}','habit')`:''}">
-            ${doneBy?'✓':DAY_LABELS[i]}</div>`;
-        }).join('')}
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="habit-edit-btn" onclick="event.stopPropagation();editCategory(${ci})">✏️</button>
+        <span class="cat-chevron${isOpen?' open':''}">›</span>
       </div>
+    </div>
+    <div class="cat-body${isOpen?' open':''}">
+      ${catHabits.map(h => habitCardHTML(h, habits.indexOf(h), today)).join('')}
+      <button onclick="openModalTypeInCat('habit','${cat.id}')" style="background:none;border:none;color:var(--accent);font-size:13px;font-weight:500;padding:8px 16px;cursor:pointer;width:100%;text-align:left;">+ Add to ${cat.name}</button>
     </div>`;
   });
-  html+=`<button class="add-habit-btn" onclick="openModalType('habit')">+ New Habit</button>`;
-  view.innerHTML=html;
+
+  if (habits.length === 0 && categories.length === 0) html += `<div class="no-events">No habits yet.</div>`;
+
+  html += `<button class="add-habit-btn" onclick="openModalType('habit')">+ New Habit</button>`;
+  html += `<button class="add-cat-btn" onclick="promptNewCategory()">+ New Category</button>`;
+  view.innerHTML = html;
+}
+
+function habitCardHTML(h, idx, today) {
+  const streak = calcStreak(h);
+  const doneBy = h.doneBy ? h.doneBy[today] : null;
+  const doneClass = doneBy === 'Pedro' ? 'done-pedro' : doneBy === 'Amelia' ? 'done-amelia' : '';
+  const doneIcon = doneBy === 'Pedro' ? '✓' : doneBy === 'Amelia' ? '✓' : '';
+  return `<div class="habit-card">
+    <button class="habit-check-btn ${doneClass}" onclick="askWho('habit_${idx}_${today}','habit')">
+      ${doneIcon ? `<span class="done-label">${doneIcon}</span>` : ''}
+    </button>
+    <div class="habit-info">
+      <div class="habit-name"><span class="habit-dot" style="background:${h.color}"></span>${h.name}</div>
+      <div class="habit-meta">${freqLabel(h)}</div>
+    </div>
+    <div class="habit-right">
+      <div class="habit-streak-badge">🔥 ${streak}</div>
+      <button class="habit-edit-btn" onclick="editHabit(${idx})">✏️</button>
+    </div>
+  </div>`;
+}
+
+function toggleCat(id) {
+  collapsedCats[id] = !collapsedCats[id];
+  localStorage.setItem('collapsedCats', JSON.stringify(collapsedCats));
+  renderHabits();
+}
+
+function promptNewCategory() {
+  const name = prompt('Category name (e.g. Kitchen, Fitness):');
+  if (!name) return;
+  const icons = ['🏠','🍳','💪','📚','🧹','🐾','💼','🌿','🎯','🚿'];
+  const icon = icons[categories.length % icons.length];
+  const id = Date.now().toString();
+  categories.push({ id, name, icon });
+  localStorage.setItem('habitCats', JSON.stringify(categories));
+  renderHabits();
+}
+
+function editCategory(ci) {
+  const cat = categories[ci];
+  const name = prompt('Rename category:', cat.name);
+  if (name === null) return;
+  if (name === '') {
+    if (confirm('Delete this category? Habits inside will become uncategorized.')) {
+      habits.forEach(h => { if (h.cat === cat.id) delete h.cat; });
+      categories.splice(ci, 1);
+      localStorage.setItem('habits2', JSON.stringify(habits));
+      localStorage.setItem('habitCats', JSON.stringify(categories));
+    }
+  } else {
+    categories[ci].name = name;
+    localStorage.setItem('habitCats', JSON.stringify(categories));
+  }
+  renderHabits();
+}
+
+function populateCatSelect(selectedCat) {
+  const sel = document.getElementById('habitCat');
+  sel.innerHTML = `<option value="">No category</option>`;
+  categories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.icon + ' ' + c.name;
+    if (selectedCat === c.id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function openModalTypeInCat(type, catId) {
+  openModalType(type);
+  populateCatSelect(catId);
+  document.getElementById('habitCat').value = catId;
 }
 
 function calcStreak(h){let s=0;for(let i=h.days.length-1;i>=0;i--){if(h.days[i])s++;else break;}return s;}
@@ -717,6 +827,7 @@ function openModalType(type){
   document.getElementById('modalTitle').textContent=type==='habit'?'New Habit':`New ${type.charAt(0).toUpperCase()+type.slice(1)}`;
   document.querySelectorAll('.dp-day').forEach(d=>d.classList.remove('sel'));
   document.getElementById('modalActions').innerHTML=`<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveEvent()">Save</button>`;
+  populateCatSelect('');
   onTypeChange(); document.getElementById('modal').classList.add('open');
 }
 
@@ -729,6 +840,7 @@ function onTypeChange(){
   document.getElementById('recurField').style.display=type==='event'?'block':'none';
   document.getElementById('colorField').style.display=(type==='habit'||type==='event')?'block':'none';
   document.getElementById('freqField').style.display=type==='habit'?'block':'none';
+  document.getElementById('catField').style.display=type==='habit'?'block':'none';
   document.getElementById('dateField').style.display=type==='habit'?'none':'block';
   onFreqChange();
 }
@@ -746,11 +858,13 @@ async function saveEvent(){
   if(type==='habit'){
     const freq=document.getElementById('habitFreq').value;
     const specificDays=freq==='specific'?[...document.querySelectorAll('.dp-day.sel')].map(d=>parseInt(d.dataset.d)):[];
+    const cat=document.getElementById('habitCat').value||null;
     if(editingSource==='habit'&&editingId!==null){
       habits[editingId].name=title; habits[editingId].color=selectedColor;
       habits[editingId].freq=freq; habits[editingId].specificDays=specificDays;
+      habits[editingId].cat=cat;
     } else {
-      habits.push({name:title,color:selectedColor,freq,specificDays,days:[0,0,0,0,0,0,0],doneBy:{},createdDate:fmt(new Date())});
+      habits.push({name:title,color:selectedColor,freq,specificDays,days:[0,0,0,0,0,0,0],doneBy:{},createdDate:fmt(new Date()),cat});
     }
     localStorage.setItem('habits2',JSON.stringify(habits)); renderHabits(); closeModal(); switchTab('habits'); return;
   }
