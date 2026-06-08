@@ -677,10 +677,14 @@ function renderSchedule(){
   let html=`<div class="day-header">${label}</div>`;
   if(gcalEvs.length>0){
     html+=`<div class="section-label">Events</div>`;
-    for(let h=7;h<=22;h++){
-      const hStr=h.toString().padStart(2,'0')+':00';
-      const ev=gcalEvs.find(e=>{if(!e.start?.dateTime)return false;return parseInt(e.start.dateTime.split('T')[1])===h;});
-      html+=`<div class="time-row"><span class="time-lbl">${hStr}</span><div class="time-col">${ev?evCard(ev):''}</div></div>`;
+    const allDay = gcalEvs.filter(e => !e.start?.dateTime);
+const timed = gcalEvs.filter(e => !!e.start?.dateTime);
+allDay.forEach(ev => { html += evCard(ev); });
+for(let h=7;h<=22;h++){
+  const hStr=h.toString().padStart(2,'0')+':00';
+  const ev=timed.find(e=>parseInt(e.start.dateTime.split('T')[1])===h);
+  html+=`<div class="time-row"><span class="time-lbl">${hStr}</span><div class="time-col">${ev?evCard(ev):''}</div></div>`;
+}
     }
   } else {html+=`<div class="no-events">No calendar events today</div>`;}
 
