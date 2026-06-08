@@ -857,18 +857,31 @@ function calcStreak(h){let s=0;for(let i=h.days.length-1;i>=0;i--){if(h.days[i])
 function openStats(){
   const now=new Date();
   document.getElementById('statsMonth').textContent=now.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  function countWho(val) {
+    const people = val ? (Array.isArray(val) ? val : [val]) : [];
+    return { p: people.includes('Pedro') ? 1 : 0, a: people.includes('Amelia') ? 1 : 0 };
+  }
   let pH=0,aH=0;
-  const habitData=habits.map(h=>{let p=0,a=0;if(h.doneBy)Object.values(h.doneBy).forEach(w=>{if(w==='Pedro')p++;else if(w==='Amelia')a++;});pH+=p;aH+=a;return{name:h.name,pedro:p,amelia:a};});
+  const habitData=habits.map(h=>{
+    let p=0,a=0;
+    if(h.doneBy) Object.values(h.doneBy).forEach(w=>{ const c=countWho(w); p+=c.p; a+=c.a; });
+    pH+=p; aH+=a; return{name:h.name,pedro:p,amelia:a};
+  });
   let pT=0,aT=0;
-  localItems.forEach(i=>{if(i.doneBy==='Pedro')pT++;else if(i.doneBy==='Amelia')aT++;});
-  calendarEvents.forEach(e=>{if(e.doneBy==='Pedro')pT++;else if(e.doneBy==='Amelia')aT++;});
+  localItems.forEach(i=>{ const c=countWho(i.doneBy); pT+=c.p; aT+=c.a; });
+  calendarEvents.forEach(e=>{ const c=countWho(e.doneBy); pT+=c.p; aT+=c.a; });
   document.getElementById('statPedroTotal').textContent=pH+pT;
   document.getElementById('statAmeliaTotal').textContent=aH+aT;
   const maxH=Math.max(...habitData.map(h=>h.pedro+h.amelia),1);
   document.getElementById('habitBars').innerHTML=habitData.length===0?`<div style="font-size:13px;color:var(--muted)">No habits yet.</div>`:habitData.map(h=>`<div class="bar-row"><div class="bar-name" title="${h.name}">${h.name}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(h.pedro/maxH*100)}%;background:var(--pedro)"></div><div class="bar-fill" style="width:${Math.round(h.amelia/maxH*100)}%;background:var(--amelia)"></div></div><div class="bar-count">${h.pedro+h.amelia}</div></div>`).join('');
   const types=['reminder','birthday','exercise','event'];
   const tNames={reminder:'Reminders',birthday:'Birthdays',exercise:'Exercises',event:'Events'};
-  const tRows=types.map(t=>{let p=0,a=0;localItems.filter(i=>i.type===t).forEach(i=>{if(i.doneBy==='Pedro')p++;else if(i.doneBy==='Amelia')a++;});if(t==='event')calendarEvents.forEach(e=>{if(e.doneBy==='Pedro')p++;else if(e.doneBy==='Amelia')a++;});return{name:tNames[t],pedro:p,amelia:a,total:p+a};}).filter(r=>r.total>0);
+  const tRows=types.map(t=>{
+    let p=0,a=0;
+    localItems.filter(i=>i.type===t).forEach(i=>{ const c=countWho(i.doneBy); p+=c.p; a+=c.a; });
+    if(t==='event') calendarEvents.forEach(e=>{ const c=countWho(e.doneBy); p+=c.p; a+=c.a; });
+    return{name:tNames[t],pedro:p,amelia:a,total:p+a};
+  }).filter(r=>r.total>0);
   const maxT=Math.max(...tRows.map(r=>r.total),1);
   document.getElementById('taskBars').innerHTML=tRows.length===0?`<div style="font-size:13px;color:var(--muted)">No completed tasks yet.</div>`:tRows.map(r=>`<div class="bar-row"><div class="bar-name">${r.name}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(r.pedro/maxT*100)}%;background:var(--pedro)"></div><div class="bar-fill" style="width:${Math.round(r.amelia/maxT*100)}%;background:var(--amelia)"></div></div><div class="bar-count">${r.total}</div></div>`).join('');
   document.getElementById('statsPanel').classList.add('open');
