@@ -410,7 +410,41 @@
     <button onclick="closeIconPicker()" style="width:100%;background:var(--surface2);border:none;color:var(--text);padding:12px;font-family:var(--sans);font-size:14px;cursor:pointer;border-radius:980px;margin-top:16px;">Cancel</button>
   </div>
 </div>
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCIOn3wTxwMMdHC2ItSRa8yo6oVwhRGPkA",
+  authDomain: "calendar-a80f0.firebaseapp.com",
+  projectId: "calendar-a80f0",
+  storageBucket: "calendar-a80f0.firebasestorage.app",
+  messagingSenderId: "944464588424",
+  appId: "1:944464588424:web:dce9ae58939ac049fa393d"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const USER_ID = 'pedro_amelia';
+
+async function fbLoad() {
+  try {
+    const snap = await getDoc(doc(db, 'caldata', USER_ID));
+    if (snap.exists()) {
+      const d = snap.data();
+      habits = d.habits || [];
+      localItems = d.localItems || [];
+      categories = d.categories || [];
+    }
+  } catch(e) { console.log('Firebase load error', e); }
+}
+
+async function fbSave() {
+  try {
+    await setDoc(doc(db, 'caldata', USER_ID), {
+      habits, localItems, categories, updatedAt: new Date().toISOString()
+    });
+  } catch(e) { console.log('Firebase save error', e); }
+}
 const CLIENT_ID = '292126261971-v33ko726ib2o3ltatigo2ktd7i36l20h.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -428,13 +462,12 @@ let currentView = 'week';
 let selectedColor = '#0071e3';
 let selectedColorId = '7';
 let calendarEvents = [];
-let localItems = JSON.parse(localStorage.getItem('localItems2') || '[]');
-let habits = JSON.parse(localStorage.getItem('habits2') || '[]');
-let categories = JSON.parse(localStorage.getItem('habitCats') || '[]');
+let localItems = [];
+let habits = [];
+let categories = [];
 let pendingDoneId = null, pendingDoneType = 'task';
 let collapsedCats = JSON.parse(localStorage.getItem('collapsedCats') || '{}');
-let editingId = null, editingSource = null; // 'gcal' | 'local' | 'habit'
-
+let editingId = null, editingSource = null;
 
 // THEME & LAYOUT
 let currentTheme = localStorage.getItem('theme') || 'light';
@@ -515,6 +548,7 @@ function loadGIS() {
   return new Promise(resolve=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=resolve;document.head.appendChild(s);});
 }
 async function init() {
+  await fbLoad(); // load habits, localItems, categories from Firebase first
   await loadGIS();
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:SCOPES,
@@ -732,8 +766,8 @@ function editLocalItem(id){
 }
 function deleteLocalItem(id){
   if(!confirm('Delete this item?')) return;
-  localItems=localItems.filter(i=>i.id!==id); localStorage.setItem('localItems2',JSON.stringify(localItems));
-  closeModal(); renderSchedule(); renderWeek();
+  localItems=localItems.filter(i=>i.id!==id);
+  fbSave(); closeModal(); renderSchedule(); renderWeek();
 }
 
 // EDIT HABIT
@@ -752,8 +786,8 @@ function editHabit(idx){
 }
 function deleteHabit(idx){
   if(!confirm('Delete this habit?')) return;
-  habits.splice(idx,1); localStorage.setItem('habits2',JSON.stringify(habits));
-  closeModal(); renderHabits();
+  habits.splice(idx,1);
+  fbSave(); closeModal(); renderHabits();
 }
 
 // WHO DID IT
@@ -826,6 +860,7 @@ function confirmWho() {
   }
   pendingDoneId = null;
   if (pendingDoneType === 'habit') renderHabits(); else renderSchedule();
+  fbSave();
 }
 
 function closeWhoModal() {
@@ -931,8 +966,7 @@ function promptNewCategory() {
   const icon = icons[categories.length % icons.length];
   const id = Date.now().toString();
   categories.push({ id, name, icon });
-  localStorage.setItem('habitCats', JSON.stringify(categories));
-  renderHabits();
+  fbSave(); renderHabits();
 }
 
 function editCategory(ci) {
@@ -940,20 +974,17 @@ function editCategory(ci) {
   const action = prompt(`Edit "${cat.name}"\n\n1 - Rename\n2 - Change icon\n3 - Delete\n\nEnter 1, 2 or 3:`);
   if (action === '1') {
     const name = prompt('New name:', cat.name);
-    if (name) { categories[ci].name = name; localStorage.setItem('habitCats', JSON.stringify(categories)); renderHabits(); }
+    if (name) { categories[ci].name = name; fbSave(); renderHabits(); }
   } else if (action === '2') {
     openIconPicker(icon => {
       categories[ci].icon = icon;
-      localStorage.setItem('habitCats', JSON.stringify(categories));
-      renderHabits();
+      fbSave(); renderHabits();
     });
   } else if (action === '3') {
     if (confirm('Delete this category? Habits inside will become uncategorized.')) {
       habits.forEach(h => { if (h.cat === cat.id) delete h.cat; });
       categories.splice(ci, 1);
-      localStorage.setItem('habits2', JSON.stringify(habits));
-      localStorage.setItem('habitCats', JSON.stringify(categories));
-      renderHabits();
+      fbSave(); renderHabits();
     }
   }
 }
@@ -1087,7 +1118,7 @@ async function saveEvent(){
     } else {
       habits.push({name:title,color:selectedColor,freq,specificDays,days:[0,0,0,0,0,0,0],doneBy:{},createdDate:fmt(new Date()),cat});
     }
-    localStorage.setItem('habits2',JSON.stringify(habits)); renderHabits(); closeModal(); switchTab('habits'); return;
+    fbSave(); renderHabits(); closeModal(); switchTab('habits'); return;
   }
 
   // EDIT/ADD GCAL EVENT
@@ -1120,7 +1151,7 @@ async function saveEvent(){
   } else {
     localItems.push({id:Date.now().toString(),type,title,date,time,notes,doneBy:null});
   }
-  localStorage.setItem('localItems2',JSON.stringify(localItems)); closeModal(); renderWeek(); renderSchedule();
+  fbSave(); closeModal(); renderWeek(); renderSchedule();
 }
 
 // WEATHER BAR
