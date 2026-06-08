@@ -333,11 +333,15 @@
 <!-- WHO DID IT -->
 <div id="whoModal">
   <div class="who-sheet">
-    <div class="who-title" id="whoTitle">Task completed! 🎉</div>
-    <div class="who-sub">Who completed it?</div>
-    <div class="who-btns">
-      <button class="who-btn" style="background:var(--pedro);" onclick="markDone('Pedro')">Pedro</button>
-      <button class="who-btn" style="background:var(--amelia);" onclick="markDone('Amelia')">Amelia</button>
+    <div class="who-title" id="whoTitle">Who completed it?</div>
+    <div class="who-sub">Select one or both. Tap again to remove.</div>
+    <div class="who-btns" style="margin-bottom:14px;">
+      <button class="who-btn" id="whoPedro" style="background:var(--surface2);color:var(--pedro);border:2px solid var(--pedro);" onclick="toggleWho('Pedro')">Pedro</button>
+      <button class="who-btn" id="whoAmelia" style="background:var(--surface2);color:var(--amelia);border:2px solid var(--amelia);" onclick="toggleWho('Amelia')">Amelia</button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-cancel" style="flex:1;" onclick="closeWhoModal()">Cancel</button>
+      <button class="btn-primary" style="flex:1;" onclick="confirmWho()">Confirm</button>
     </div>
   </div>
 </div>
@@ -531,9 +535,12 @@ function renderSchedule(){
   view.innerHTML=html;
 }
 
-function doneBadge(doneBy){
-  if(!doneBy) return '';
-  return `<div class="ev-done-badge" style="background:${doneBy==='Pedro'?'#e8f0fe':'#fce4f3'};color:${doneBy==='Pedro'?'#0071e3':'#e3008c'}">✓ ${doneBy}</div>`;
+function doneBadge(doneBy) {
+  if (!doneBy) return '';
+  const people = Array.isArray(doneBy) ? doneBy : [doneBy];
+  return people.map(w =>
+    `<div class="ev-done-badge" style="background:${w==='Pedro'?'#e8f0fe':'#fce4f3'};color:${w==='Pedro'?'#0071e3':'#e3008c'}">✓ ${w}</div>`
+  ).join('');
 }
 
 function evCard(ev){
@@ -631,27 +638,81 @@ function deleteHabit(idx){
 }
 
 // WHO DID IT
-function askWho(itemId,type){
-  pendingDoneId=itemId; pendingDoneType=type;
-  document.getElementById('whoTitle').textContent=type==='habit'?'Habit done! 💪':'Task completed! 🎉';
+let whoSelection = [];
+
+function askWho(itemId, type) {
+  pendingDoneId = itemId; pendingDoneType = type;
+  whoSelection = [];
+
+  // Pre-populate current value so user can remove
+  let current = null;
+  if (itemId.startsWith('local_')) {
+    const item = localItems.find(i => i.id === itemId.replace('local_',''));
+    current = item?.doneBy;
+  } else if (itemId.startsWith('gcal_')) {
+    const ev = calendarEvents.find(e => e.id === itemId.replace('gcal_',''));
+    current = ev?.doneBy;
+  } else if (itemId.startsWith('habit_')) {
+    const parts = itemId.replace('habit_','').split('_');
+    current = habits[parseInt(parts[0])]?.doneBy?.[parseInt(parts[1])];
+  }
+  if (current) whoSelection = Array.isArray(current) ? [...current] : [current];
+
+  updateWhoButtons();
+  document.getElementById('whoTitle').textContent = type === 'habit' ? 'Habit done! 💪' : 'Task completed! 🎉';
   document.getElementById('whoModal').classList.add('open');
 }
-function markDone(who){
-  document.getElementById('whoModal').classList.remove('open');
-  if(!pendingDoneId) return;
-  if(pendingDoneId.startsWith('local_')){
-    const id=pendingDoneId.replace('local_',''); const item=localItems.find(i=>i.id===id);
-    if(item){item.doneBy=who;localStorage.setItem('localItems2',JSON.stringify(localItems));}
-  } else if(pendingDoneId.startsWith('gcal_')){
-    const id=pendingDoneId.replace('gcal_',''); const ev=calendarEvents.find(e=>e.id===id);
-    if(ev) ev.doneBy=who;
-  } else if(pendingDoneId.startsWith('habit_')){
-    const parts=pendingDoneId.replace('habit_','').split('_'); const idx=parseInt(parts[0]); const day=parseInt(parts[1]);
-    if(habits[idx]){if(!habits[idx].doneBy)habits[idx].doneBy={};habits[idx].doneBy[day]=who;habits[idx].days[day]=1;localStorage.setItem('habits2',JSON.stringify(habits));}
-  }
-  pendingDoneId=null; if(pendingDoneType==='habit')renderHabits();else renderSchedule();
+
+function toggleWho(who) {
+  const idx = whoSelection.indexOf(who);
+  if (idx >= 0) whoSelection.splice(idx, 1);
+  else whoSelection.push(who);
+  updateWhoButtons();
 }
-document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal')){document.getElementById('whoModal').classList.remove('open');pendingDoneId=null;}});
+
+function updateWhoButtons() {
+  const pb = document.getElementById('whoPedro');
+  const ab = document.getElementById('whoAmelia');
+  const pSel = whoSelection.includes('Pedro');
+  const aSel = whoSelection.includes('Amelia');
+  pb.style.background = pSel ? 'var(--pedro)' : 'var(--surface2)';
+  pb.style.color = pSel ? '#fff' : 'var(--pedro)';
+  ab.style.background = aSel ? 'var(--amelia)' : 'var(--surface2)';
+  ab.style.color = aSel ? '#fff' : 'var(--amelia)';
+}
+
+function confirmWho() {
+  document.getElementById('whoModal').classList.remove('open');
+  if (!pendingDoneId) return;
+  // value: null if none, string if one, array if both
+  const val = whoSelection.length === 0 ? null : whoSelection.length === 1 ? whoSelection[0] : [...whoSelection];
+
+  if (pendingDoneId.startsWith('local_')) {
+    const id = pendingDoneId.replace('local_','');
+    const item = localItems.find(i => i.id === id);
+    if (item) { item.doneBy = val; localStorage.setItem('localItems2', JSON.stringify(localItems)); }
+  } else if (pendingDoneId.startsWith('gcal_')) {
+    const id = pendingDoneId.replace('gcal_','');
+    const ev = calendarEvents.find(e => e.id === id);
+    if (ev) ev.doneBy = val;
+  } else if (pendingDoneId.startsWith('habit_')) {
+    const parts = pendingDoneId.replace('habit_','').split('_');
+    const idx = parseInt(parts[0]); const day = parseInt(parts[1]);
+    if (habits[idx]) {
+      if (!habits[idx].doneBy) habits[idx].doneBy = {};
+      habits[idx].doneBy[day] = val;
+      habits[idx].days[day] = val ? 1 : 0;
+      localStorage.setItem('habits2', JSON.stringify(habits));
+    }
+  }
+  pendingDoneId = null;
+  if (pendingDoneType === 'habit') renderHabits(); else renderSchedule();
+}
+
+function closeWhoModal() {
+  document.getElementById('whoModal').classList.remove('open');
+  pendingDoneId = null; whoSelection = [];
+}
 
 function todayDayIndex() {
   const d = new Date().getDay();
@@ -709,12 +770,24 @@ function renderHabits() {
 function habitCardHTML(h, idx, today) {
   const streak = calcStreak(h);
   const doneBy = h.doneBy ? h.doneBy[today] : null;
-  const doneClass = doneBy === 'Pedro' ? 'done-pedro' : doneBy === 'Amelia' ? 'done-amelia' : '';
-  const doneIcon = doneBy === 'Pedro' ? '✓' : doneBy === 'Amelia' ? '✓' : '';
+  const people = doneBy ? (Array.isArray(doneBy) ? doneBy : [doneBy]) : [];
+  const hasPedro = people.includes('Pedro');
+  const hasAmelia = people.includes('Amelia');
+  let btnStyle, btnContent;
+  if (hasPedro && hasAmelia) {
+    btnStyle = 'background:linear-gradient(135deg,var(--pedro) 50%,var(--amelia) 50%);border-color:transparent;';
+    btnContent = '<span class="done-label">✓</span>';
+  } else if (hasPedro) {
+    btnStyle = 'background:var(--pedro);border-color:var(--pedro);';
+    btnContent = '<span class="done-label">✓</span>';
+  } else if (hasAmelia) {
+    btnStyle = 'background:var(--amelia);border-color:var(--amelia);';
+    btnContent = '<span class="done-label">✓</span>';
+  } else {
+    btnStyle = ''; btnContent = '';
+  }
   return `<div class="habit-card">
-    <button class="habit-check-btn ${doneClass}" onclick="askWho('habit_${idx}_${today}','habit')">
-      ${doneIcon ? `<span class="done-label">${doneIcon}</span>` : ''}
-    </button>
+    <button class="habit-check-btn" style="${btnStyle}" onclick="askWho('habit_${idx}_${today}','habit')">${btnContent}</button>
     <div class="habit-info">
       <div class="habit-name"><span class="habit-dot" style="background:${h.color}"></span>${h.name}</div>
       <div class="habit-meta">${freqLabel(h)}</div>
@@ -902,6 +975,7 @@ async function saveEvent(){
   localStorage.setItem('localItems2',JSON.stringify(localItems)); closeModal(); renderWeek(); renderSchedule();
 }
 
+document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal'))closeWhoModal();});
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
 init();
 </script>
