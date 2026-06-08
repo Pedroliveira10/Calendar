@@ -17,6 +17,11 @@
     --sans: -apple-system,'Inter',BlinkMacSystemFont,sans-serif;
     --radius: 12px; --radius-sm: 8px;
   }
+  body.dark {
+    --bg: #1c1c1e; --surface: #2c2c2e; --surface2: #3a3a3c;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+    --text: #f2f2f7; --muted: #98989f;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
   #app { display: flex; flex-direction: column; height: 100vh; max-width: 430px; margin: 0 auto; overflow: hidden; background: var(--bg); }
@@ -206,6 +211,7 @@
         <button class="icon-btn" onclick="prevPeriod()">‹</button>
         <button class="icon-btn" onclick="nextPeriod()">›</button>
         <button class="icon-btn" onclick="openStats()" style="font-size:16px;">📊</button>
+        <button class="icon-btn" onclick="openSettings()" style="font-size:16px;">⚙️</button>
         <button class="icon-btn" onclick="signOut()" style="font-size:13px;">↩</button>
       </div>
     </div>
@@ -289,12 +295,22 @@
     </div>
     <div class="field" id="colorField">
       <label>Color</label>
-      <div class="color-row">
-        <div class="color-chip sel" style="background:#0071e3" onclick="selectColor(this,'#0071e3','7')"></div>
-        <div class="color-chip" style="background:#34c759" onclick="selectColor(this,'#34c759','2')"></div>
-        <div class="color-chip" style="background:#ff9500" onclick="selectColor(this,'#ff9500','6')"></div>
-        <div class="color-chip" style="background:#ff3b30" onclick="selectColor(this,'#ff3b30','11')"></div>
-        <div class="color-chip" style="background:#af52de" onclick="selectColor(this,'#af52de','3')"></div>
+      <div class="color-row" style="flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+        <div class="color-chip sel" style="background:#0071e3" onclick="selectColorPreset(this,'#0071e3','7')"></div>
+        <div class="color-chip" style="background:#34c759" onclick="selectColorPreset(this,'#34c759','2')"></div>
+        <div class="color-chip" style="background:#ff9500" onclick="selectColorPreset(this,'#ff9500','6')"></div>
+        <div class="color-chip" style="background:#ff3b30" onclick="selectColorPreset(this,'#ff3b30','11')"></div>
+        <div class="color-chip" style="background:#af52de" onclick="selectColorPreset(this,'#af52de','3')"></div>
+        <div class="color-chip" style="background:#ff2d55" onclick="selectColorPreset(this,'#ff2d55','4')"></div>
+        <div class="color-chip" style="background:#5ac8fa" onclick="selectColorPreset(this,'#5ac8fa','9')"></div>
+        <div class="color-chip" style="background:#ffcc00" onclick="selectColorPreset(this,'#ffcc00','5')"></div>
+        <div class="color-chip" style="background:#30b0c7" onclick="selectColorPreset(this,'#30b0c7','10')"></div>
+        <div class="color-chip" style="background:#a2845e" onclick="selectColorPreset(this,'#a2845e','8')"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="color" id="colorPickerInput" value="#0071e3" oninput="selectColorCustom(this.value)" style="width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;padding:0;background:none;">
+        <span style="font-size:12px;color:var(--muted);">Or pick any color</span>
+        <div id="colorPreview" style="width:24px;height:24px;border-radius:50%;background:#0071e3;border:2px solid var(--border2);"></div>
       </div>
     </div>
     <div class="field" id="freqField" style="display:none;">
@@ -346,6 +362,37 @@
   </div>
 </div>
 
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:250;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:8px 20px 44px;">
+    <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 20px;"></div>
+    <div style="font-size:17px;font-weight:600;margin-bottom:20px;">Settings</div>
+
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Appearance</div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button id="btnLight" onclick="setTheme('light')" style="flex:1;padding:12px;border-radius:var(--radius);border:2px solid var(--accent);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">☀️ Light</button>
+      <button id="btnDark" onclick="setTheme('dark')" style="flex:1;padding:12px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">🌙 Dark</button>
+    </div>
+
+    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Layout</div>
+    <div style="display:flex;gap:8px;margin-bottom:24px;">
+      <button id="btnPhone" onclick="setLayout('phone')" style="flex:1;padding:12px;border-radius:var(--radius);border:2px solid var(--accent);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">📱 Phone</button>
+      <button id="btnLaptop" onclick="setLayout('laptop')" style="flex:1;padding:12px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">💻 Laptop</button>
+    </div>
+
+    <button onclick="closeSettings()" style="width:100%;background:var(--surface2);border:none;color:var(--text);padding:14px;font-family:var(--sans);font-size:15px;cursor:pointer;border-radius:980px;">Done</button>
+  </div>
+</div>
+
+<!-- CATEGORY ICON PICKER -->
+<div id="iconPickerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:350;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border-radius:20px;padding:20px;width:320px;max-height:80vh;overflow-y:auto;">
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;text-align:center;">Pick an icon</div>
+    <div id="iconGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;"></div>
+    <button onclick="closeIconPicker()" style="width:100%;background:var(--surface2);border:none;color:var(--text);padding:12px;font-family:var(--sans);font-size:14px;cursor:pointer;border-radius:980px;margin-top:16px;">Cancel</button>
+  </div>
+</div>
 <script>
 const CLIENT_ID = '292126261971-v33ko726ib2o3ltatigo2ktd7i36l20h.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
@@ -370,6 +417,59 @@ let categories = JSON.parse(localStorage.getItem('habitCats') || '[]');
 let pendingDoneId = null, pendingDoneType = 'task';
 let collapsedCats = JSON.parse(localStorage.getItem('collapsedCats') || '{}');
 let editingId = null, editingSource = null; // 'gcal' | 'local' | 'habit'
+
+
+// THEME & LAYOUT
+let currentTheme = localStorage.getItem('theme') || 'light';
+let currentLayout = localStorage.getItem('layout') || 'phone';
+
+function applyTheme(t) {
+  currentTheme = t;
+  document.body.classList.toggle('dark', t === 'dark');
+  document.querySelector('meta[name="theme-color"]').content = t === 'dark' ? '#1c1c1e' : '#ffffff';
+  localStorage.setItem('theme', t);
+}
+function applyLayout(l) {
+  currentLayout = l;
+  document.getElementById('app').style.maxWidth = l === 'laptop' ? '900px' : '430px';
+  document.getElementById('fab').style.right = l === 'laptop' ? 'calc(50% - 450px + 20px)' : 'calc(50% - 215px + 20px)';
+  localStorage.setItem('layout', l);
+}
+function setTheme(t) {
+  applyTheme(t);
+  document.getElementById('btnLight').style.borderColor = t==='light'?'var(--accent)':'var(--border2)';
+  document.getElementById('btnDark').style.borderColor = t==='dark'?'var(--accent)':'var(--border2)';
+}
+function setLayout(l) {
+  applyLayout(l);
+  document.getElementById('btnPhone').style.borderColor = l==='phone'?'var(--accent)':'var(--border2)';
+  document.getElementById('btnLaptop').style.borderColor = l==='laptop'?'var(--accent)':'var(--border2)';
+}
+function openSettings() {
+  document.getElementById('settingsModal').style.display = 'flex';
+  setTheme(currentTheme); setLayout(currentLayout);
+}
+function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+document.getElementById('settingsModal').addEventListener('click', e => { if(e.target===document.getElementById('settingsModal')) closeSettings(); });
+
+// ICON PICKER
+const ALL_ICONS = ['🏠','🍳','💪','📚','🧹','🐾','💼','🌿','🎯','🚿','🛒','🚗','✈️','🎮','🎵','🎨','📝','💊','🏋️','🧘','🍎','💧','☕','🛌','🌅','🧺','🔧','💡','📱','🖥️','🏃','🚴','🤸','🎸','📖','✍️','🧠','❤️','⭐','🔑','🏆','🎁','🍕','🧁','🥗','🍜','🧃','🌍','🌙','☀️','🌈'];
+let iconPickerCallback = null;
+
+function openIconPicker(callback) {
+  iconPickerCallback = callback;
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = ALL_ICONS.map(ic =>
+    `<button onclick="pickIcon('${ic}')" style="font-size:24px;background:var(--surface2);border:none;border-radius:8px;padding:8px;cursor:pointer;aspect-ratio:1;">${ic}</button>`
+  ).join('');
+  document.getElementById('iconPickerModal').style.display = 'flex';
+}
+function pickIcon(icon) {
+  document.getElementById('iconPickerModal').style.display = 'none';
+  if(iconPickerCallback) { iconPickerCallback(icon); iconPickerCallback = null; }
+}
+function closeIconPicker() { document.getElementById('iconPickerModal').style.display = 'none'; iconPickerCallback = null; }
+document.getElementById('iconPickerModal').addEventListener('click', e => { if(e.target===document.getElementById('iconPickerModal')) closeIconPicker(); });
 
 function getWeekStart(d) {
   const s = new Date(d); const day = s.getDay();
@@ -405,6 +505,8 @@ async function init() {
   });
   const saved=localStorage.getItem('gtoken');
   if(saved){accessToken=saved;showMain();await loadEvents();}
+  applyTheme(currentTheme);
+  applyLayout(currentLayout);
   document.getElementById('loading').style.display='none';
 }
 function signIn(){tokenClient.requestAccessToken();}
@@ -818,20 +920,25 @@ function promptNewCategory() {
 
 function editCategory(ci) {
   const cat = categories[ci];
-  const name = prompt('Rename category:', cat.name);
-  if (name === null) return;
-  if (name === '') {
+  const action = prompt(`Edit "${cat.name}"\n\n1 - Rename\n2 - Change icon\n3 - Delete\n\nEnter 1, 2 or 3:`);
+  if (action === '1') {
+    const name = prompt('New name:', cat.name);
+    if (name) { categories[ci].name = name; localStorage.setItem('habitCats', JSON.stringify(categories)); renderHabits(); }
+  } else if (action === '2') {
+    openIconPicker(icon => {
+      categories[ci].icon = icon;
+      localStorage.setItem('habitCats', JSON.stringify(categories));
+      renderHabits();
+    });
+  } else if (action === '3') {
     if (confirm('Delete this category? Habits inside will become uncategorized.')) {
       habits.forEach(h => { if (h.cat === cat.id) delete h.cat; });
       categories.splice(ci, 1);
       localStorage.setItem('habits2', JSON.stringify(habits));
       localStorage.setItem('habitCats', JSON.stringify(categories));
+      renderHabits();
     }
-  } else {
-    categories[ci].name = name;
-    localStorage.setItem('habitCats', JSON.stringify(categories));
   }
-  renderHabits();
 }
 
 function populateCatSelect(selectedCat) {
@@ -933,7 +1040,19 @@ function onTypeChange(){
 function onFreqChange(){document.getElementById('specificDaysField').style.display=document.getElementById('habitFreq').value==='specific'?'block':'none';}
 function toggleDay(el){el.classList.toggle('sel');}
 function closeModal(){document.getElementById('modal').classList.remove('open');editingId=null;editingSource=null;}
-function selectColor(el,color,id){document.querySelectorAll('.color-chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');selectedColor=color;selectedColorId=id;}
+function selectColorPreset(el,color,id){
+  document.querySelectorAll('.color-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedColor=color; selectedColorId=id;
+  document.getElementById('colorPickerInput').value=color;
+  document.getElementById('colorPreview').style.background=color;
+}
+function selectColorCustom(color){
+  document.querySelectorAll('.color-chip').forEach(c=>c.classList.remove('sel'));
+  selectedColor=color; selectedColorId='7';
+  document.getElementById('colorPreview').style.background=color;
+}
+function selectColor(el,color,id){selectColorPreset(el,color,id);}
 
 async function saveEvent(){
   const title=document.getElementById('evTitle').value.trim();
