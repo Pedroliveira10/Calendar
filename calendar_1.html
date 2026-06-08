@@ -178,6 +178,21 @@
   .wx-item { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 3px; }
   .wx-temp { font-size: 13px; font-weight: 500; color: var(--text); }
 
+  /* SHOPPING LIST */
+  .shop-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .shop-input { flex: 1; background: var(--surface); border: none; color: var(--text); font-family: var(--sans); font-size: 15px; padding: 12px 14px; border-radius: var(--radius); outline: none; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .shop-add-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius); padding: 12px 16px; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+  .shop-cat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 0 6px; }
+  .shop-item { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .shop-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border2); background: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: all 0.15s; }
+  .shop-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .shop-item-text { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); }
+  .shop-item-text.done { text-decoration: line-through; color: var(--muted); }
+  .shop-who { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 980px; }
+  .shop-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 4px; flex-shrink: 0; }
+  .shop-cat-select { background: var(--surface2); border: none; color: var(--muted); font-family: var(--sans); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm); outline: none; -webkit-appearance: none; }
+  .shop-clear-btn { background: none; border: 0.5px solid var(--border2); color: var(--muted); font-family: var(--sans); font-size: 12px; padding: 6px 12px; border-radius: 980px; cursor: pointer; margin-bottom: 12px; }
+
   #topbar.show { display: block; }
   #content.show { display: block; }
   #fab.show { display: flex; }
@@ -228,11 +243,13 @@
   <div class="tabs" id="tabs">
     <div class="tab active" id="tabSchedule" onclick="switchTab('schedule')">Schedule</div>
     <div class="tab" id="tabHabits" onclick="switchTab('habits')">Habits</div>
+    <div class="tab" id="tabShop" onclick="switchTab('shop')">🛒</div>
   </div>
 
   <div id="content">
     <div id="scheduleView"></div>
     <div id="habitsView" style="display:none;"></div>
+    <div id="shopView" style="display:none;"></div>
   </div>
   <button id="fab" onclick="openModal()">+</button>
 </div>
@@ -407,10 +424,10 @@ window.fbLoad = async function() {
   } catch(e) { console.log('Firebase load error', e); }
 };
 
-window.fbSave = async function(habits, localItems, categories) {
+window.fbSave = async function(habits, localItems, categories, shopItems) {
   try {
     await setDoc(doc(db, 'caldata', USER_ID), {
-      habits, localItems, categories, updatedAt: new Date().toISOString()
+      habits, localItems, categories, shopItems: shopItems||[], updatedAt: new Date().toISOString()
     });
   } catch(e) { console.log('Firebase save error', e); }
 };
@@ -440,6 +457,7 @@ let calendarEvents = [];
 let localItems = [];
 let habits = [];
 let categories = [];
+let shopItems = [];
 let pendingDoneId = null, pendingDoneType = 'task';
 let whoSelection = [];
 let collapsedCats = JSON.parse(localStorage.getItem('collapsedCats') || '{}');
@@ -455,7 +473,7 @@ function getWeekStart(d) {
 }
 function fmt(d) { return d.toISOString().split('T')[0]; }
 function typeColor(t) { return {event:'#0071e3',reminder:'#ff9500',birthday:'#af52de',exercise:'#34c759'}[t]||'#0071e3'; }
-function save() { if(typeof window.fbSave==='function') window.fbSave(habits,localItems,categories); }
+function save() { if(typeof window.fbSave==='function') window.fbSave(habits,localItems,categories,shopItems); }
 
 // ── THEME / LAYOUT ──
 function applyTheme(t) {
@@ -508,6 +526,7 @@ async function init() {
       habits=window._fbData.habits||[];
       localItems=window._fbData.localItems||[];
       categories=window._fbData.categories||[];
+      shopItems=window._fbData.shopItems||[];
     }
   }
   await loadGIS();
@@ -894,8 +913,11 @@ function switchTab(tab){
   currentTab=tab;
   document.getElementById('tabSchedule').className='tab'+(tab==='schedule'?' active':'');
   document.getElementById('tabHabits').className='tab'+(tab==='habits'?' active':'');
+  document.getElementById('tabShop').className='tab'+(tab==='shop'?' active':'');
   document.getElementById('scheduleView').style.display=tab==='schedule'?'block':'none';
   document.getElementById('habitsView').style.display=tab==='habits'?'block':'none';
+  document.getElementById('shopView').style.display=tab==='shop'?'block':'none';
+  if(tab==='shop') renderShop();
 }
 
 function openModal(){openModalType('event');}
@@ -978,7 +1000,74 @@ async function saveEvent(){
   save(); closeModal(); renderWeek(); renderSchedule();
 }
 
-// ── WEATHER ──
+function showToast(msg, color='#333'){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:${color};color:#fff;padding:10px 20px;border-radius:980px;font-size:13px;font-weight:500;z-index:999;max-width:300px;text-align:center;`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+// ── SHOPPING LIST ──
+const SHOP_CATS = ['🥦 Vegetables','🍎 Fruit','🥩 Meat & Fish','🧀 Dairy','🥖 Bakery','🧃 Drinks','🧹 Cleaning','🛁 Personal Care','🍝 Pantry','📦 Other'];
+let shopInputCat = '📦 Other';
+
+function renderShop(){
+  const view=document.getElementById('shopView');
+  const unchecked=shopItems.filter(i=>!i.checked);
+  const checked=shopItems.filter(i=>i.checked);
+  let html=`
+    <div class="shop-input-row">
+      <input class="shop-input" id="shopInput" type="text" placeholder="Add item..." onkeydown="if(event.key==='Enter')addShopItem()">
+      <button class="shop-add-btn" onclick="addShopItem()">+</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+      <select class="shop-cat-select" id="shopCatSel" onchange="shopInputCat=this.value">
+        ${SHOP_CATS.map(c=>`<option value="${c}"${c===shopInputCat?' selected':''}>${c}</option>`).join('')}
+      </select>
+      <select class="shop-cat-select" id="shopWhoSel">
+        <option value="Pedro">Pedro</option>
+        <option value="Amelia">Amelia</option>
+      </select>
+    </div>`;
+  if(unchecked.length===0&&checked.length===0) html+=`<div class="no-events">List is empty. Add something!</div>`;
+  const catGroups={};
+  unchecked.forEach(i=>{if(!catGroups[i.cat])catGroups[i.cat]=[];catGroups[i.cat].push(i);});
+  Object.entries(catGroups).forEach(([cat,items])=>{
+    html+=`<div class="shop-cat-label">${cat}</div>`;
+    items.forEach(item=>{html+=shopItemHTML(item);});
+  });
+  if(checked.length>0){
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+      <div class="shop-cat-label" style="padding:0;">✓ In cart (${checked.length})</div>
+      <button class="shop-clear-btn" onclick="clearChecked()">Clear all</button>
+    </div>`;
+    checked.forEach(item=>{html+=shopItemHTML(item);});
+  }
+  view.innerHTML=html;
+}
+
+function shopItemHTML(item){
+  const whoColor=item.who==='Pedro'?'background:#e8f0fe;color:#0071e3':'background:#fce4f3;color:#e3008c';
+  return `<div class="shop-item">
+    <button class="shop-check${item.checked?' checked':''}" onclick="toggleShopItem('${item.id}')">${item.checked?'✓':''}</button>
+    <span class="shop-item-text${item.checked?' done':''}">${item.name}</span>
+    <span class="shop-who" style="${whoColor}">${item.who}</span>
+    <button class="shop-del" onclick="deleteShopItem('${item.id}')">×</button>
+  </div>`;
+}
+
+function addShopItem(){
+  const input=document.getElementById('shopInput');
+  const name=input.value.trim(); if(!name) return;
+  const cat=document.getElementById('shopCatSel').value;
+  const who=document.getElementById('shopWhoSel').value;
+  shopItems.push({id:Date.now().toString(),name,cat,who,checked:false});
+  input.value=''; save(); renderShop();
+}
+function toggleShopItem(id){const item=shopItems.find(i=>i.id===id);if(!item)return;item.checked=!item.checked;save();renderShop();}
+function deleteShopItem(id){shopItems=shopItems.filter(i=>i.id!==id);save();renderShop();}
+function clearChecked(){shopItems=shopItems.filter(i=>!i.checked);save();renderShop();}
+
 function startWxClock(){
   function tick(){const now=new Date();document.getElementById('wxTime').textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');}
   tick(); setInterval(tick,10000);
