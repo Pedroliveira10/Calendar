@@ -548,11 +548,13 @@ function loadGIS() {
   return new Promise(resolve=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=resolve;document.head.appendChild(s);});
 }
 async function init() {
-  await window.fbLoad();
-  if (window._fbData) {
-    habits = window._fbData.habits || [];
-    localItems = window._fbData.localItems || [];
-    categories = window._fbData.categories || [];
+  if (typeof window.fbLoad === 'function') {
+    await window.fbLoad();
+    if (window._fbData) {
+      habits = window._fbData.habits || [];
+      localItems = window._fbData.localItems || [];
+      categories = window._fbData.categories || [];
+    }
   }
   await loadGIS();
   tokenClient = google.accounts.oauth2.initTokenClient({
@@ -1199,7 +1201,15 @@ document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===d
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
 startWxClock();
 fetchWxWeather();
-init();
+// Wait for Firebase module to load before init
+function waitForFirebase() {
+  if (typeof window.fbLoad === 'function') {
+    init();
+  } else {
+    setTimeout(waitForFirebase, 50);
+  }
+}
+waitForFirebase();
 </script>
 </body>
 </html>
