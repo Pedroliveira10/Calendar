@@ -559,7 +559,7 @@ async function init() {
   await loadGIS();
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id:CLIENT_ID, scope:SCOPES,
-    callback:async(resp)=>{if(resp.error)return;accessToken=resp.access_token;localStorage.setItem('gtoken',accessToken);showMain();await loadEvents();}
+    Callback:async(resp)=>{if(resp.error)return;accessToken=resp.access_token;localStorage.setItem('gtoken',accessToken);if(document.getElementById('authScreen').style.display==='none'){await loadEvents();}else{showMain();await loadEvents();}}
   });
   const saved=localStorage.getItem('gtoken');
   if(saved){accessToken=saved;showMain();await loadEvents();}
@@ -586,7 +586,8 @@ async function loadEvents(){
   const end=new Date(weekStart); end.setDate(1); end.setMonth(end.getMonth()+2);
   const url=`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${start.toISOString()}&timeMax=${end.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=500`;
   const res=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`}});
-  if(res.status===401){accessToken=null;localStorage.removeItem('gtoken');return;}
+  if(res.status===401){accessToken=null;localStorage.removeItem('gtoken');tokenClient.requestAccessToken({prompt:''});return;}
+if(!res.ok) return;
   const data=await res.json(); calendarEvents=data.items||[];
   renderWeek(); renderMonthView(); renderSchedule();
 }
