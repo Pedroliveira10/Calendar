@@ -400,6 +400,9 @@
       <button id="btnLaptop" onclick="setLayout('laptop')" style="flex:1;padding:12px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;">💻 Laptop</button>
     </div>
     <button onclick="closeSettings()" style="width:100%;background:var(--surface2);border:none;color:var(--text);padding:14px;font-family:var(--sans);font-size:15px;cursor:pointer;border-radius:980px;">Done</button>
+    <div style="height:12px;"></div>
+    <button id="installBtn" onclick="installApp()" style="display:none;width:100%;background:var(--accent);color:#fff;border:none;padding:14px;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;border-radius:980px;">📲 Install App</button>
+    <div id="iosInstallHint" style="display:none;text-align:center;font-size:12px;color:var(--muted);padding:10px 0;">On iPhone: tap <strong>Share</strong> → <strong>Add to Home Screen</strong></div>
   </div>
 </div>
 
@@ -511,7 +514,20 @@ function setLayout(l) {
   document.getElementById('btnPhone').style.borderColor=l==='phone'?'var(--accent)':'var(--border2)';
   document.getElementById('btnLaptop').style.borderColor=l==='laptop'?'var(--accent)':'var(--border2)';
 }
-function openSettings() { document.getElementById('settingsModal').style.display='flex'; setTheme(currentTheme); setLayout(currentLayout); }
+function openSettings() {
+  document.getElementById('settingsModal').style.display='flex';
+  setTheme(currentTheme); setLayout(currentLayout);
+  // Show install option based on platform
+  const installBtn=document.getElementById('installBtn');
+  const iosHint=document.getElementById('iosInstallHint');
+  if(deferredPrompt){
+    installBtn.style.display='block'; iosHint.style.display='none';
+  } else if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!navigator.standalone){
+    installBtn.style.display='none'; iosHint.style.display='block';
+  } else {
+    installBtn.style.display='none'; iosHint.style.display='none';
+  }
+}
 function closeSettings() { document.getElementById('settingsModal').style.display='none'; }
 
 // ── ICON PICKER ──
