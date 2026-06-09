@@ -974,7 +974,11 @@ function switchTab(tab){
   if(tab==='shop') renderShop();
 }
 
-function openModal(){openModalType('event');}
+function openModal(){
+  if(currentTab==='habits') openModalType('habit');
+  else if(currentTab==='shop') { switchTab('shop'); setTimeout(()=>document.getElementById('shopInput')?.focus(),100); return; }
+  else openModalType('event');
+}
 function openModalType(type){
   editingId=null; editingSource=null;
   document.getElementById('evType').value=type;
@@ -984,7 +988,11 @@ function openModalType(type){
   document.getElementById('evNotes').value='';
   document.getElementById('evLocation').value='';
   document.getElementById('evRecur').value='none';
-  document.getElementById('modalTitle').textContent=type==='habit'?'New Habit':`New ${type.charAt(0).toUpperCase()+type.slice(1)}`;
+  const typeLabels={event:'New Event',reminder:'New Reminder',birthday:'New Birthday',exercise:'New Exercise',habit:'New Task'};
+  document.getElementById('modalTitle').textContent=typeLabels[type]||'New';
+  // Hide type dropdown — context from tab
+  const typeField=document.getElementById('evType').closest('.field');
+  if(typeField) typeField.style.display='none';
   document.querySelectorAll('.dp-day').forEach(d=>d.classList.remove('sel'));
   document.getElementById('modalActions').innerHTML=`<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveEvent()">Save</button>`;
   populateCatSelect(''); onTypeChange(); document.getElementById('modal').classList.add('open');
@@ -1008,6 +1016,8 @@ function toggleDay(el){el.classList.toggle('sel');}
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
   editingId=null; editingSource=null;
+  const typeField=document.getElementById('evType')?.closest('.field');
+  if(typeField) typeField.style.display='';
   const iconRow=document.getElementById('catIconRow');
   if(iconRow) iconRow.style.display='none';
 }
