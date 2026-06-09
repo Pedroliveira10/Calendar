@@ -701,10 +701,12 @@ function renderSchedule(){
   view.innerHTML=html;
 }
 
-function doneBadge(doneBy){
+function doneBadge(doneBy, itemId){
   if(!doneBy) return '';
   const people=Array.isArray(doneBy)?doneBy:[doneBy];
-  return people.map(w=>`<div class="ev-done-badge" style="background:${w==='Pedro'?'#e8f0fe':'#fce4f3'};color:${w==='Pedro'?'#0071e3':'#e3008c'}">✓ ${w}</div>`).join('');
+  return people.map(w=>
+    `<div class="ev-done-badge" style="background:${w==='Pedro'?'#e8f0fe':'#fce4f3'};color:${w==='Pedro'?'#0071e3':'#e3008c'};cursor:pointer;" onclick="undoWho('${itemId}')" title="Tap to undo">✓ ${w} ×</div>`
+  ).join('');
 }
 
 function evCard(ev){
@@ -714,7 +716,7 @@ function evCard(ev){
     <div class="ev-title">${ev.recurrence?'🔁 ':''}${ev.summary||'(no title)'}</div>
     <div class="ev-meta" style="color:${c}">${time}${ev.location?' · '+ev.location:''}</div>
     ${ev.description?`<div class="ev-notes">${ev.description}</div>`:''}
-    ${doneBadge(ev.doneBy)}
+    ${doneBadge(ev.doneBy, `gcal_${ev.id}`)}
     <div class="ev-actions">
       <button class="ev-action-btn" style="background:#e8f0fe;color:#0071e3;" onclick="editGcalEvent('${ev.id}')">✏️ Edit</button>
       <button class="ev-action-btn" style="background:#fff0f0;color:#ff3b30;" onclick="deleteGcalEvent('${ev.id}')">🗑 Delete</button>
@@ -731,7 +733,7 @@ function quickCard(item){
       <div class="quick-title">${item.title}</div>
       ${item.time?`<div class="quick-sub">${item.time}</div>`:''}
       ${item.notes?`<div class="quick-sub" style="font-style:italic">${item.notes}</div>`:''}
-      ${doneBadge(item.doneBy)}
+      ${doneBadge(item.doneBy, `local_${item.id}`)}
       <div class="quick-actions">
         <button class="ev-action-btn" style="background:#e8f0fe;color:#0071e3;" onclick="editLocalItem('${item.id}')">✏️ Edit</button>
         <button class="ev-action-btn" style="background:#fff0f0;color:#ff3b30;" onclick="deleteLocalItem('${item.id}')">🗑 Delete</button>
@@ -801,14 +803,20 @@ function deleteHabit(idx){
 
 // ── WHO DID IT ──
 function askWho(itemId,type){
+  // If we know who's logged in, mark directly without popup
+  if(currentUser){
+    pendingDoneId=itemId; pendingDoneType=type;
+    whoSelection=[currentUser];
+    confirmWho();
+    return;
+  }
+  // Fallback: show popup if user unknown
   pendingDoneId=itemId; pendingDoneType=type; whoSelection=[];
   let current=null;
   if(itemId.startsWith('local_')){const item=localItems.find(i=>i.id===itemId.replace('local_',''));current=item?.doneBy;}
   else if(itemId.startsWith('gcal_')){const ev=calendarEvents.find(e=>e.id===itemId.replace('gcal_',''));current=ev?.doneBy;}
   else if(itemId.startsWith('habit_')){const parts=itemId.replace('habit_','').split('_');current=habits[parseInt(parts[0])]?.doneBy?.[parseInt(parts[1])];}
   if(current) whoSelection=Array.isArray(current)?[...current]:[current];
-  // Pre-select current user if nothing selected yet
-  else if(currentUser && whoSelection.length===0) whoSelection=[currentUser];
   updateWhoButtons();
   document.getElementById('whoTitle').textContent=type==='habit'?'Habit done! 💪':'Task completed! 🎉';
   document.getElementById('whoModal').classList.add('open');
@@ -844,6 +852,19 @@ function confirmWho(){
   if(pendingDoneType==='habit') renderHabits(); else renderSchedule();
 }
 function closeWhoModal(){document.getElementById('whoModal').classList.remove('open');pendingDoneId=null;whoSelection=[];}
+
+  if(itemId.startsWith('local_')){
+    const item=localItems.find(i=>i.id===itemId.replace('local_',''));
+    if(item){item.doneBy=null;save();renderSchedule();}
+  } else if(itemId.startsWith('gcal_')){
+    const ev=calendarEvents.find(e=>e.id===itemId.replace('gcal_',''));
+    if(ev){ev.doneBy=null;renderSchedule();}
+  } else if(itemId.startsWith('habit_')){
+    const parts=itemId.replace('habit_','').split('_');
+    const idx=parseInt(parts[0]); const day=parseInt(parts[1]);
+    if(habits[idx]){habits[idx].doneBy[day]=null;habits[idx].days[day]=0;save();renderHabits();}
+  }
+}
 
 function todayDayIndex(){const d=new Date().getDay();return d===0?6:d-1;}
 
