@@ -704,9 +704,12 @@ function renderSchedule(){
 function doneBadge(doneBy, itemId){
   if(!doneBy) return '';
   const people=Array.isArray(doneBy)?doneBy:[doneBy];
-  return people.map(w=>
-    `<div class="ev-done-badge" style="background:${w==='Pedro'?'#e8f0fe':'#fce4f3'};color:${w==='Pedro'?'#0071e3':'#e3008c'};cursor:pointer;" onclick="undoWho('${itemId}')" title="Tap to undo">✓ ${w} ×</div>`
-  ).join('');
+  return people.map(w=>{
+    const bg=w==='Pedro'?'#e8f0fe':'#fce4f3';
+    const col=w==='Pedro'?'#0071e3':'#e3008c';
+    const id=itemId||'';
+    return `<div class="ev-done-badge" style="background:${bg};color:${col};cursor:pointer;" onclick="undoWho('${id}')" title="Tap to undo">\u2713 ${w} \u00d7</div>`;
+  }).join('');
 }
 
 function evCard(ev){
@@ -852,6 +855,20 @@ function confirmWho(){
   if(pendingDoneType==='habit') renderHabits(); else renderSchedule();
 }
 function closeWhoModal(){document.getElementById('whoModal').classList.remove('open');pendingDoneId=null;whoSelection=[];}
+
+function undoWho(itemId){
+  if(itemId.startsWith('local_')){
+    const item=localItems.find(i=>i.id===itemId.replace('local_',''));
+    if(item){item.doneBy=null;save();renderSchedule();}
+  } else if(itemId.startsWith('gcal_')){
+    const ev=calendarEvents.find(e=>e.id===itemId.replace('gcal_',''));
+    if(ev){ev.doneBy=null;renderSchedule();}
+  } else if(itemId.startsWith('habit_')){
+    const parts=itemId.replace('habit_','').split('_');
+    const idx=parseInt(parts[0]); const day=parseInt(parts[1]);
+    if(habits[idx]){habits[idx].doneBy[day]=null;habits[idx].days[day]=0;save();renderHabits();}
+  }
+}
 
   if(itemId.startsWith('local_')){
     const item=localItems.find(i=>i.id===itemId.replace('local_',''));
