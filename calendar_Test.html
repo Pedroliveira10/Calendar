@@ -898,10 +898,42 @@ function promptNewCategory(){
 
 function editCategory(ci){
   const cat=categories[ci];
-  const action=prompt(`Edit "${cat.name}"\n\n1 - Rename\n2 - Change icon\n3 - Delete\n\nEnter 1, 2 or 3:`);
-  if(action==='1'){const name=prompt('New name:',cat.name);if(name){categories[ci].name=name;save();renderHabits();}}
-  else if(action==='2'){openIconPicker(icon=>{categories[ci].icon=icon;save();renderHabits();});}
-  else if(action==='3'){if(confirm('Delete? Habits will become uncategorized.')){habits.forEach(h=>{if(h.cat===cat.id)delete h.cat;});categories.splice(ci,1);save();renderHabits();}}
+  // Reuse the modal — set it up for category editing
+  document.getElementById('modalTitle').textContent=`Edit "${cat.name}"`;
+  document.getElementById('evType').value='_cat';
+  document.getElementById('evTitle').value=cat.name;
+  document.getElementById('modalActions').innerHTML=`
+    <button class="btn-delete" onclick="deleteCategory(${ci})">Delete</button>
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    <button class="btn-primary" onclick="saveCategoryEdit(${ci})">Save</button>`;
+  // Hide all habit-specific fields, show just title + icon picker button
+  ['dateField','timeField','durField','notesField','locationField','recurField','colorField','freqField','catField','pointsField','specificDaysField'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  // Add icon row if not present
+  let iconRow=document.getElementById('catIconRow');
+  if(!iconRow){
+    iconRow=document.createElement('div');
+    iconRow.id='catIconRow';
+    iconRow.className='field';
+    iconRow.innerHTML=`<label>Icon</label><div style="display:flex;align-items:center;gap:12px;"><span id="catIconPreview" style="font-size:28px;">${cat.icon||'📁'}</span><button type="button" onclick="openIconPicker(icon=>{document.getElementById('catIconPreview').textContent=icon;})" style="background:var(--surface2);border:none;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:500;padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;">Change icon</button></div>`;
+    document.getElementById('modalActions').parentNode.insertBefore(iconRow, document.getElementById('modalActions'));
+  } else {
+    iconRow.style.display='block';
+    document.getElementById('catIconPreview').textContent=cat.icon||'📁';
+  }
+  document.getElementById('modal').classList.add('open');
+}
+function saveCategoryEdit(ci){
+  const name=document.getElementById('evTitle').value.trim(); if(!name) return;
+  const icon=document.getElementById('catIconPreview').textContent;
+  categories[ci].name=name; categories[ci].icon=icon;
+  save(); closeModal(); renderHabits();
+}
+function deleteCategory(ci){
+  if(!confirm('Delete? Tasks inside will become uncategorized.')) return;
+  habits.forEach(h=>{if(h.cat===categories[ci].id)delete h.cat;});
+  categories.splice(ci,1); save(); closeModal(); renderHabits();
 }
 
 function populateCatSelect(selectedCat){
@@ -973,7 +1005,12 @@ function onTypeChange(){
 }
 function onFreqChange(){document.getElementById('specificDaysField').style.display=document.getElementById('habitFreq').value==='specific'?'block':'none';}
 function toggleDay(el){el.classList.toggle('sel');}
-function closeModal(){document.getElementById('modal').classList.remove('open');editingId=null;editingSource=null;}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  editingId=null; editingSource=null;
+  const iconRow=document.getElementById('catIconRow');
+  if(iconRow) iconRow.style.display='none';
+}
 function selectColor(el,color,id){document.querySelectorAll('.color-chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');selectedColor=color;selectedColorId=id;}
 
 // ── SAVE EVENT ──
