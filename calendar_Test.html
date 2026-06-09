@@ -687,6 +687,7 @@ function renderSchedule(){
     <button onclick="openModalType('exercise')" style="background:var(--surface);border:none;color:#34c759;font-size:12px;font-weight:500;padding:8px 12px;border-radius:980px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.08);">+ Exercise</button>
   </div>`;
   view.innerHTML=html;
+  setTimeout(()=>initSwipe(view),30);
 }
 
 function doneBadge(doneBy, itemId){
@@ -1172,12 +1173,7 @@ function initSwipe(container){
   });
 }
 
-// Reinit swipe after every render
-const _origRenderSchedule=renderSchedule;
-function renderSchedule(){
-  _origRenderSchedule();
-  setTimeout(()=>initSwipe(document.getElementById('scheduleView')),50);
-}
+// initSwipe called after renderSchedule - see renderSchedule function
 
 document.getElementById('statsPanel').addEventListener('click',e=>{if(e.target===document.getElementById('statsPanel'))closeStats();});
 document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal'))closeWhoModal();});
