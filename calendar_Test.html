@@ -115,8 +115,8 @@
   .habit-right { display: flex; align-items: center; gap: 6px; }
   .habit-streak-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 980px; background: var(--surface2); color: var(--muted); white-space: nowrap; }
   .habit-edit-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 4px; }
-  .add-habit-btn { background: var(--surface); border: none; color: var(--accent); width: 100%; padding: 14px; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius); box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-top: 4px; }
-  .add-cat-btn { background: none; border: 1.5px dashed var(--border2); color: var(--muted); width: 100%; padding: 12px; font-family: var(--sans); font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--radius); margin-top: 4px; }
+  .add-habit-btn { background: var(--accent); border: none; color: #fff; width: 100%; padding: 14px; font-family: var(--sans); font-size: 14px; font-weight: 600; cursor: pointer; border-radius: var(--radius); margin-top: 8px; letter-spacing: 0.2px; }
+  .add-cat-btn { background: var(--surface); border: 1.5px solid var(--border2); color: var(--muted); width: 100%; padding: 13px; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius); margin-top: 8px; }
   .done-label { font-size: 11px; font-weight: 600; color: #fff; }
 
   #statsPanel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 250; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
@@ -880,8 +880,8 @@ function renderHabits(){
     </div>`;
   });
   if(habits.length===0&&categories.length===0) html+=`<div class="no-events">No habits yet.</div>`;
-  html+=`<button class="add-habit-btn" onclick="openModalType('habit')">+ New Habit</button>`;
-  html+=`<button class="add-cat-btn" onclick="promptNewCategory()">+ New Category</button>`;
+  html+=`<button class="add-habit-btn" onclick="openModalType('habit')">New Task</button>`;
+  html+=`<button class="add-cat-btn" onclick="promptNewCategory()">New Category</button>`;
   view.innerHTML=html;
 }
 
@@ -1020,6 +1020,8 @@ function switchTab(tab){
   document.getElementById('scheduleView').style.display=tab==='schedule'?'block':'none';
   document.getElementById('habitsView').style.display=tab==='habits'?'block':'none';
   document.getElementById('shopView').style.display=tab==='shop'?'block':'none';
+  // Only show FAB on schedule tab
+  document.getElementById('fab').style.display=tab==='schedule'?'flex':'none';
   if(tab==='shop') renderShop();
 }
 
