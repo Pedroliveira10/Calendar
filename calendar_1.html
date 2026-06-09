@@ -1170,24 +1170,25 @@ async function fetchWxWeather(){
 }
 
 // ── EVENT LISTENERS ──
-document.getElementById('statsPanel').addEventListener('click',e=>{if(e.target===document.getElementById('statsPanel'))closeStats();});
-document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal'))closeWhoModal();});
-document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
-document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===document.getElementById('settingsModal'))closeSettings();});
-document.getElementById('iconPickerModal').addEventListener('click',e=>{if(e.target===document.getElementById('iconPickerModal'))closeIconPicker();});
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('statsPanel').addEventListener('click',e=>{if(e.target===document.getElementById('statsPanel'))closeStats();});
+  document.getElementById('whoModal').addEventListener('click',e=>{if(e.target===document.getElementById('whoModal'))closeWhoModal();});
+  document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
+  document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===document.getElementById('settingsModal'))closeSettings();});
+  document.getElementById('iconPickerModal').addEventListener('click',e=>{if(e.target===document.getElementById('iconPickerModal'))closeIconPicker();});
 
-// ── START ──
-startWxClock();
-fetchWxWeather();
-setInterval(()=>{if(accessToken)loadEvents();},5*60*1000);
+  startWxClock();
+  fetchWxWeather();
+  setInterval(()=>{if(accessToken)loadEvents();},5*60*1000);
 
-let fbWaitCount=0;
-function waitForFirebase(){
-  if(typeof window.fbLoad==='function'){init();}
-  else if(fbWaitCount++<40){setTimeout(waitForFirebase,50);}
-  else{console.log('Firebase timeout, starting without sync');init();}
-}
-waitForFirebase();
+  let fbWaitCount=0;
+  function waitForFirebase(){
+    if(typeof window.fbLoad==='function'){init();}
+    else if(fbWaitCount++<40){setTimeout(waitForFirebase,50);}
+    else{console.log('Firebase timeout, starting without sync');init();}
+  }
+  waitForFirebase();
+});
 </script>
 </body>
 </html>
