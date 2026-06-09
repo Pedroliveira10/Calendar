@@ -892,8 +892,37 @@ function calcStreak(h){let s=0;for(let i=h.days.length-1;i>=0;i--){if(h.days[i])
 function toggleCat(id){collapsedCats[id]=!collapsedCats[id];localStorage.setItem('collapsedCats',JSON.stringify(collapsedCats));renderHabits();}
 
 function promptNewCategory(){
-  const name=prompt('Category name (e.g. Kitchen, Fitness):'); if(!name) return;
-  openIconPicker(icon=>{categories.push({id:Date.now().toString(),name,icon});save();renderHabits();});
+  document.getElementById('modalTitle').textContent='New Category';
+  document.getElementById('evType').value='_newcat';
+  document.getElementById('evTitle').value='';
+  // Hide all fields except title
+  ['dateField','timeField','durField','notesField','locationField','recurField','colorField','freqField','catField','pointsField','specificDaysField'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  const typeField=document.getElementById('evType').closest('.field');
+  if(typeField) typeField.style.display='none';
+  // Make sure title field is visible
+  const titleInput=document.getElementById('evTitle');
+  if(titleInput) { titleInput.closest('.field').style.display='block'; titleInput.placeholder='Category name...'; }
+  // Add icon row
+  let iconRow=document.getElementById('catIconRow');
+  if(!iconRow){
+    iconRow=document.createElement('div');
+    iconRow.id='catIconRow'; iconRow.className='field';
+    iconRow.innerHTML=`<label>Icon</label><div style="display:flex;align-items:center;gap:12px;"><span id="catIconPreview" style="font-size:28px;">📁</span><button type="button" onclick="openIconPicker(icon=>{document.getElementById('catIconPreview').textContent=icon;})" style="background:var(--surface2);border:none;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:500;padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;">Choose icon</button></div>`;
+    document.getElementById('modalActions').parentNode.insertBefore(iconRow, document.getElementById('modalActions'));
+  } else {
+    iconRow.style.display='block';
+    document.getElementById('catIconPreview').textContent='📁';
+  }
+  document.getElementById('modalActions').innerHTML=`<button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveNewCategory()">Create</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function saveNewCategory(){
+  const name=document.getElementById('evTitle').value.trim(); if(!name) return;
+  const icon=document.getElementById('catIconPreview').textContent||'📁';
+  categories.push({id:Date.now().toString(),name,icon});
+  save(); closeModal(); renderHabits();
 }
 
 function editCategory(ci){
@@ -1018,6 +1047,8 @@ function closeModal(){
   editingId=null; editingSource=null;
   const typeField=document.getElementById('evType')?.closest('.field');
   if(typeField) typeField.style.display='';
+  const titleInput=document.getElementById('evTitle');
+  if(titleInput) titleInput.placeholder='What?';
   const iconRow=document.getElementById('catIconRow');
   if(iconRow) iconRow.style.display='none';
 }
