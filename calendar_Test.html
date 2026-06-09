@@ -231,7 +231,6 @@
         <button class="icon-btn" onclick="nextPeriod()">›</button>
         <button class="icon-btn" onclick="openStats()" style="font-size:16px;">📊</button>
         <button class="icon-btn" onclick="openSettings()" style="font-size:16px;">⚙️</button>
-        <button class="icon-btn" onclick="signOut()" style="font-size:13px;">↩</button>
       </div>
     </div>
     <div class="view-toggle">
@@ -403,6 +402,8 @@
     <div style="height:12px;"></div>
     <button id="installBtn" onclick="installApp()" style="display:none;width:100%;background:var(--accent);color:#fff;border:none;padding:14px;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;border-radius:980px;">📲 Install App</button>
     <div id="iosInstallHint" style="display:none;text-align:center;font-size:12px;color:var(--muted);padding:10px 0;">On iPhone: tap <strong>Share</strong> → <strong>Add to Home Screen</strong></div>
+    <div style="height:12px;"></div>
+    <button onclick="closeSettings();signOut();" style="width:100%;background:#fff0f0;border:none;color:#ff3b30;padding:14px;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;border-radius:980px;">↩ Sign Out</button>
   </div>
 </div>
 
