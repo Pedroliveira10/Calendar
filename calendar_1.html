@@ -242,7 +242,7 @@
 
   <div class="tabs" id="tabs">
     <div class="tab active" id="tabSchedule" onclick="switchTab('schedule')">Schedule</div>
-    <div class="tab" id="tabHabits" onclick="switchTab('habits')">Habits</div>
+    <div class="tab" id="tabHabits" onclick="switchTab('habits')">Tasks</div>
     <div class="tab" id="tabShop" onclick="switchTab('shop')">🛒</div>
   </div>
 
@@ -268,7 +268,7 @@
       <div class="total-card"><div class="total-num" id="statPedroTotal" style="color:var(--pedro)">0</div><div class="total-label">Pedro</div></div>
       <div class="total-card"><div class="total-num" id="statAmeliaTotal" style="color:var(--amelia)">0</div><div class="total-label">Amelia</div></div>
     </div>
-    <div class="chart-section"><div class="chart-label">Habits</div><div id="habitBars"></div></div>
+    <div class="chart-section"><div class="chart-label">Tasks</div><div id="habitBars"></div></div>
     <div class="chart-section"><div class="chart-label">Tasks &amp; Events</div><div id="taskBars"></div></div>
     <button class="btn-cancel" style="width:100%;margin-top:8px;" onclick="closeStats()">Close</button>
   </div>
@@ -333,7 +333,16 @@
         <option value="specific">Specific days</option>
       </select>
     </div>
-    <div class="field" id="catField" style="display:none;">
+    <div class="field" id="pointsField" style="display:none;">
+      <label>Points when done</label>
+      <select id="habitPoints">
+        <option value="1">1 pt — Low priority</option>
+        <option value="2">2 pts</option>
+        <option value="3" selected>3 pts — Normal</option>
+        <option value="5">5 pts — Important</option>
+        <option value="10">10 pts — High value</option>
+      </select>
+    </div>
       <label>Category</label>
       <select id="habitCat"><option value="">No category</option></select>
     </div>
@@ -509,7 +518,17 @@ function openIconPicker(cb) {
 function pickIcon(icon) { document.getElementById('iconPickerModal').style.display='none'; if(iconPickerCallback){iconPickerCallback(icon);iconPickerCallback=null;} }
 function closeIconPicker() { document.getElementById('iconPickerModal').style.display='none'; iconPickerCallback=null; }
 
-// ── FREQ HELPERS ──
+// ── WHO AM I ──
+// Maps Google email to display name
+const USER_MAP = {
+  'pedrofsoliveira1999@gmail.com': 'Pedro',
+  'browarnikamelia@gmail.com': 'Amelia'
+};
+let currentUser = null; // set after login
+
+function detectCurrentUser(email) {
+  currentUser = USER_MAP[email] || null;
+}
 function freqLabel(h) {
   if(h.freq==='every2') return 'Every 2 days';
   if(h.freq==='specific'){const n=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];return(h.specificDays||[]).map(d=>n[d]).join(', ')||'No days';}
@@ -536,6 +555,13 @@ async function init() {
       if(resp.error) return;
       accessToken=resp.access_token;
       localStorage.setItem('gtoken',accessToken);
+      // Get user email to auto-detect Pedro/Amelia
+      try {
+        const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${accessToken}`}});
+        const u = await info.json();
+        detectCurrentUser(u.email);
+        localStorage.setItem('userEmail', u.email);
+      } catch(e){}
       if(document.getElementById('authScreen').style.display==='none'){
         await loadEvents();
       } else {
@@ -544,7 +570,12 @@ async function init() {
     }
   });
   const saved=localStorage.getItem('gtoken');
-  if(saved){accessToken=saved;showMain();await loadEvents();}
+  if(saved){
+    accessToken=saved;
+    const savedEmail=localStorage.getItem('userEmail');
+    if(savedEmail) detectCurrentUser(savedEmail);
+    showMain();await loadEvents();
+  }
   applyTheme(currentTheme); applyLayout(currentLayout);
   document.getElementById('loading').style.display='none';
 }
@@ -754,6 +785,7 @@ function editHabit(idx){
   document.getElementById('evType').value='habit';
   document.getElementById('evTitle').value=h.name;
   document.getElementById('habitFreq').value=h.freq||'daily';
+  document.getElementById('habitPoints') && (document.getElementById('habitPoints').value=h.points||3);
   document.getElementById('modalTitle').textContent='Edit Habit';
   document.getElementById('modalActions').innerHTML=`<button class="btn-delete" onclick="deleteHabit(${idx})">Delete</button><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-primary" onclick="saveEvent()">Save</button>`;
   document.querySelectorAll('.dp-day').forEach(d=>{d.classList.toggle('sel',(h.specificDays||[]).includes(parseInt(d.dataset.d)));});
@@ -774,6 +806,8 @@ function askWho(itemId,type){
   else if(itemId.startsWith('gcal_')){const ev=calendarEvents.find(e=>e.id===itemId.replace('gcal_',''));current=ev?.doneBy;}
   else if(itemId.startsWith('habit_')){const parts=itemId.replace('habit_','').split('_');current=habits[parseInt(parts[0])]?.doneBy?.[parseInt(parts[1])];}
   if(current) whoSelection=Array.isArray(current)?[...current]:[current];
+  // Pre-select current user if nothing selected yet
+  else if(currentUser && whoSelection.length===0) whoSelection=[currentUser];
   updateWhoButtons();
   document.getElementById('whoTitle').textContent=type==='habit'?'Habit done! 💪':'Task completed! 🎉';
   document.getElementById('whoModal').classList.add('open');
@@ -815,7 +849,7 @@ function todayDayIndex(){const d=new Date().getDay();return d===0?6:d-1;}
 // ── RENDER HABITS ──
 function renderHabits(){
   const view=document.getElementById('habitsView'); const today=todayDayIndex();
-  let html=`<div class="section-label">Habits</div>`;
+  let html=`<div class="section-label">Tasks</div>`;
   habits.filter(h=>!h.cat).forEach(h=>{html+=habitCardHTML(h,habits.indexOf(h),today);});
   categories.forEach((cat,ci)=>{
     const catHabits=habits.filter(h=>h.cat===cat.id);
@@ -855,10 +889,10 @@ function habitCardHTML(h,idx,today){
     <button class="habit-check-btn" style="${btnStyle}" onclick="askWho('habit_${idx}_${today}','habit')">${btnContent}</button>
     <div class="habit-info">
       <div class="habit-name"><span class="habit-dot" style="background:${h.color}"></span>${h.name}</div>
-      <div class="habit-meta">${freqLabel(h)}</div>
+      <div class="habit-meta">${freqLabel(h)} · ${h.points||3}pts</div>
     </div>
     <div class="habit-right">
-      <div class="habit-streak-badge">🔥 ${streak}</div>
+      ${streak>0?`<div class="habit-streak-badge">🔥 ${streak}</div>`:''}
       <button class="habit-edit-btn" onclick="editHabit(${idx})">✏️</button>
     </div>
   </div>`;
@@ -869,9 +903,10 @@ function toggleCat(id){collapsedCats[id]=!collapsedCats[id];localStorage.setItem
 
 function promptNewCategory(){
   const name=prompt('Category name (e.g. Kitchen, Fitness):'); if(!name) return;
-  const icons=['🏠','🍳','💪','📚','🧹','🐾','💼','🌿','🎯','🚿'];
-  categories.push({id:Date.now().toString(),name,icon:icons[categories.length%icons.length]});
-  save(); renderHabits();
+  openIconPicker(icon=>{
+    categories.push({id:Date.now().toString(),name,icon});
+    save(); renderHabits();
+  });
 }
 
 function editCategory(ci){
@@ -893,12 +928,17 @@ function openStats(){
   const now=new Date(); document.getElementById('statsMonth').textContent=now.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   function cw(val){const p=val?(Array.isArray(val)?val:[val]):[];return{p:p.includes('Pedro')?1:0,a:p.includes('Amelia')?1:0};}
   let pH=0,aH=0;
-  const hData=habits.map(h=>{let p=0,a=0;if(h.doneBy)Object.values(h.doneBy).forEach(w=>{const c=cw(w);p+=c.p;a+=c.a;});pH+=p;aH+=a;return{name:h.name,pedro:p,amelia:a};});
+  const hData=habits.map(h=>{
+    let p=0,a=0;
+    const pts=h.points||3;
+    if(h.doneBy) Object.values(h.doneBy).forEach(w=>{const c=cw(w);p+=c.p*pts;a+=c.a*pts;});
+    pH+=p;aH+=a;return{name:h.name,pedro:p,amelia:a,pts};
+  });
   let pT=0,aT=0;
   localItems.forEach(i=>{const c=cw(i.doneBy);pT+=c.p;aT+=c.a;});
   calendarEvents.forEach(e=>{const c=cw(e.doneBy);pT+=c.p;aT+=c.a;});
-  document.getElementById('statPedroTotal').textContent=pH+pT;
-  document.getElementById('statAmeliaTotal').textContent=aH+aT;
+  document.getElementById('statPedroTotal').textContent=pH+pT+' pts';
+  document.getElementById('statAmeliaTotal').textContent=aH+aT+' pts';
   const mH=Math.max(...hData.map(h=>h.pedro+h.amelia),1);
   document.getElementById('habitBars').innerHTML=hData.length===0?`<div style="font-size:13px;color:var(--muted)">No habits yet.</div>`:hData.map(h=>`<div class="bar-row"><div class="bar-name" title="${h.name}">${h.name}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(h.pedro/mH*100)}%;background:var(--pedro)"></div><div class="bar-fill" style="width:${Math.round(h.amelia/mH*100)}%;background:var(--amelia)"></div></div><div class="bar-count">${h.pedro+h.amelia}</div></div>`).join('');
   const tRows=['reminder','birthday','exercise','event'].map(t=>{let p=0,a=0;localItems.filter(i=>i.type===t).forEach(i=>{const c=cw(i.doneBy);p+=c.p;a+=c.a;});if(t==='event')calendarEvents.forEach(e=>{const c=cw(e.doneBy);p+=c.p;a+=c.a;});return{name:{reminder:'Reminders',birthday:'Birthdays',exercise:'Exercises',event:'Events'}[t],pedro:p,amelia:a,total:p+a};}).filter(r=>r.total>0);
@@ -944,6 +984,7 @@ function onTypeChange(){
   document.getElementById('recurField').style.display=type==='event'?'block':'none';
   document.getElementById('colorField').style.display=(type==='habit'||type==='event')?'block':'none';
   document.getElementById('freqField').style.display=type==='habit'?'block':'none';
+  document.getElementById('pointsField').style.display=type==='habit'?'block':'none';
   document.getElementById('catField').style.display=type==='habit'?'block':'none';
   document.getElementById('dateField').style.display=type==='habit'?'none':'block';
   onFreqChange();
@@ -962,10 +1003,11 @@ async function saveEvent(){
     const freq=document.getElementById('habitFreq').value;
     const specificDays=freq==='specific'?[...document.querySelectorAll('.dp-day.sel')].map(d=>parseInt(d.dataset.d)):[];
     const cat=document.getElementById('habitCat').value||null;
+    const points=parseInt(document.getElementById('habitPoints').value)||3;
     if(editingSource==='habit'&&editingId!==null){
-      habits[editingId].name=title;habits[editingId].color=selectedColor;habits[editingId].freq=freq;habits[editingId].specificDays=specificDays;habits[editingId].cat=cat;
+      habits[editingId].name=title;habits[editingId].color=selectedColor;habits[editingId].freq=freq;habits[editingId].specificDays=specificDays;habits[editingId].cat=cat;habits[editingId].points=points;
     } else {
-      habits.push({name:title,color:selectedColor,freq,specificDays,days:[0,0,0,0,0,0,0],doneBy:{},createdDate:fmt(new Date()),cat});
+      habits.push({name:title,color:selectedColor,freq,specificDays,days:[0,0,0,0,0,0,0],doneBy:{},createdDate:fmt(new Date()),cat,points});
     }
     save(); renderHabits(); closeModal(); switchTab('habits'); return;
   }
