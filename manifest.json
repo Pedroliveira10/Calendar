@@ -1,8 +1,9 @@
 {
   "name": "Pedro & Amelia",
-  "short_name": "Calendar",
+  "short_name": "P & A",
   "description": "Our shared calendar, habits and shopping list",
-  "start_url": "/Calendar/calendar_1.html",
+  "start_url": "/Calendar/calendar_Test.html",
+  "scope": "/Calendar/",
   "display": "standalone",
   "background_color": "#f5f5f7",
   "theme_color": "#0071e3",
