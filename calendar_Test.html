@@ -10,6 +10,15 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="https://api.iconify.design/twemoji/calendar.svg">
 <title>Pedro's Calendar</title>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "f0399b80-18f5-44c7-a30a-9d617cce7dc6",
+    });
+  });
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
