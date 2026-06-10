@@ -16,6 +16,8 @@
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "f0399b80-18f5-44c7-a30a-9d617cce7dc6",
+      serviceWorkerParam: { scope: "/Calendar/" },
+      serviceWorkerPath: "/Calendar/OneSignalSDKWorker.js"
     });
   });
 </script>
